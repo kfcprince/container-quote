@@ -201,7 +201,6 @@ else:
     exchange_rate = 6.9
     markup_rate = 1.2
     df_active = df_db
-    st.sidebar.info("Login to edit prices. / 登录以修改价格。")
 
 # ==========================================
 # 主界面
@@ -425,3 +424,4 @@ if not df_res.empty:
             st.table(df_display)
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
