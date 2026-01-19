@@ -446,7 +446,8 @@ if not df_res.empty:
             st.table(df_display)
 
     # [Requirement 3] FOB 缩小，用 caption (灰色小字)
-    st.caption(f"🚢 FOB Price / FOB 价格 (含$900杂费): $ {fob_price:,.2f}")
+    st.caption(f"🚢 FOB Price / FOB 价格: $ {fob_price:,.2f}")
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
