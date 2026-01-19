@@ -4,12 +4,12 @@ import os
 from datetime import date, timedelta
 
 # ==========================================
-# 1. 核心数据 (同步 calc.py 的 79 行数据)
+# 1. 核心数据 (CSV结构)
 # ==========================================
 CSV_FILE = "prices_v3.csv"
 columns = ['项目名称', '单位', 'X折叠', 'F700', '10FT', '15FT', '20FT', '30FT', '40FT']
 
-# 完整 79 行原始数据
+# 79 行原始数据 (作为备份和初始化)
 default_data = [
     ['无', '项', 0, 0, 0, 0, 0, 0, 0],
     ['不要', '项', 0, 0, 0, 0, 0, 0, 0],
@@ -100,7 +100,7 @@ RESTRICTED_FOR_X = [
     '踢脚线/顶角线/阴角线', '顶部瓦楞板', '内顶金属雕花板', '平顶', '长城板'
 ]
 
-# === 翻译字典：将核心词转换为 "Eng / 中文" 格式 ===
+# === 翻译与双语显示字典 ===
 TRANS = {
     "基础": "Basic / 基础",
     "装修": "Decor / 装修",
@@ -110,8 +110,6 @@ TRANS = {
     "配件": "Accessories / 配件",
     "认证": "Cert / 认证",
     "升级": "Upgrade / 升级",
-    
-    # 项目名翻译
     "基础箱体": "Basic Unit / 基础箱体",
     "内部布局": "Layout / 内部布局",
     "保温升级": "Insulation / 保温升级",
@@ -124,7 +122,7 @@ TRANS = {
     "纱窗": "Screen / 纱窗",
     "卫浴": "Bathroom / 卫浴",
     "橱柜": "Cabinet / 橱柜",
-    "马桶": "Toilet / 马桶",
+    "马桶": "Upgrade Toilet / 升级马桶",
     "热水器": "Water Heater / 热水器",
     "排气扇": "Exhaust Fan / 排气扇",
     "吊柜": "Hanging Cab / 吊柜",
@@ -145,10 +143,16 @@ TRANS = {
     "插座认证": "Socket Cert / 插座认证",
     "上下水认证": "Plumbing Cert / 上下水认证",
     "灯具认证": "Light Cert / 灯具认证",
+    "认证电线": "Wire Cert / 认证电线"
 }
-
 def t_cat(k): return TRANS.get(k, k)
 def t_item(k): return TRANS.get(k, k)
+
+# 核心函数：从 "Eng / 中文" 中提取中文以进行查价
+def get_cn(text):
+    if "/" in text:
+        return text.split("/")[-1].strip()
+    return text
 
 st.set_page_config(page_title="Global Quotation System", layout="wide")
 
@@ -172,7 +176,7 @@ def get_p(item_name, size):
 # ==========================================
 st.sidebar.title("🔐 Admin / 管理后台")
 admin_pwd = st.sidebar.text_input("Password / 密码", type="password")
-IS_ADMIN = (admin_pwd == "123456")
+IS_ADMIN = (admin_pwd == "HUAhan807810")
 
 if IS_ADMIN:
     st.sidebar.success("✅ Login Success / 已登录")
@@ -180,8 +184,8 @@ if IS_ADMIN:
     exchange_rate = st.sidebar.number_input("Exchange Rate (RMB/USD)", 6.0, 8.0, 6.9, 0.05)
     markup_rate = st.sidebar.number_input("Markup / 利润系数", 1.0, 2.5, 1.2, 0.05)
     
-    with st.expander("🛠️ Price Editor /底价管理", expanded=False):
-        st.warning("Changes are temporary. Download to save permanently. / 修改仅临时生效，请导出保存。")
+    with st.expander("🛠️ Price Editor / 底价管理", expanded=False):
+        st.warning("临时修改，重启失效。请导出保存。")
         edited_df = st.data_editor(df_db, num_rows="dynamic", use_container_width=True, height=600)
         
         if st.button("💾 Save (Temp) / 临时保存"):
@@ -205,7 +209,7 @@ else:
 # ==========================================
 # 主界面
 # ==========================================
-st.title("🏠 Container House Quotation / 集装箱房屋报价")
+st.title("🏠 Container House Quotation")
 bill = []
 
 # --- 1. Basic ---
@@ -213,15 +217,20 @@ st.subheader("1. Basic / 基础配置")
 c1, c2 = st.columns(2)
 with c1:
     size = st.selectbox("Size / 房型尺寸", ['20FT', 'X折叠', 'F700', '10FT', '15FT', '30FT', '40FT'])
+    # 基础箱体没有双语列表，因为它是核心Key，但显示时用 t_item 翻译了
     bill.append({"Cat": t_cat("基础"), "Item": t_item("基础箱体"), "Spec": size, "Qty": 1, "RMB": get_p('基础箱体', size)})
 
 with c2:
-    if size == "X折叠": opts = ['空箱', '房间数量定制']
-    elif size == "40FT": opts = ['空箱', '一室', '两室', '三室', '四室', '五室', '六室', '房间数量定制']
-    else: opts = ['空箱', '一室', '两室', '三室', '四室', '房间数量定制']
+    # 布局列表双语化
+    if size == "X折叠": opts = ['Empty / 空箱', 'Custom Qty / 房间数量定制']
+    elif size == "40FT": opts = ['Empty / 空箱', '1 Bedroom / 一室', '2 Bedroom / 两室', '3 Bedroom / 三室', '4 Bedroom / 四室', '5 Bedroom / 五室', '6 Bedroom / 六室', 'Custom Qty / 房间数量定制']
+    else: opts = ['Empty / 空箱', '1 Bedroom / 一室', '2 Bedroom / 两室', '3 Bedroom / 三室', '4 Bedroom / 四室', 'Custom Qty / 房间数量定制']
+    
     layout = st.selectbox("Layout / 内部布局", opts)
-    if layout not in ['空箱', '房间数量定制']:
-        bill.append({"Cat": t_cat("基础"), "Item": t_item("内部布局"), "Spec": layout, "Qty": 1, "RMB": get_p(layout, size)})
+    layout_cn = get_cn(layout) # 提取中文查价
+    
+    if layout_cn not in ['空箱', '房间数量定制']:
+        bill.append({"Cat": t_cat("基础"), "Item": t_item("内部布局"), "Spec": layout, "Qty": 1, "RMB": get_p(layout_cn, size)})
 
 # --- 2. Decoration ---
 st.markdown("---")
@@ -230,73 +239,96 @@ is_x = (size == "X折叠")
 
 c1, c2, c3 = st.columns(3)
 with c1:
-    ins = st.selectbox("Insulation / 保温材料", ['岩棉 50mm', '岩棉 75mm', 'eps 75mm', '聚氨酯 75mm'])
-    if ins != '岩棉 50mm': bill.append({"Cat": t_cat("装修"), "Item": t_item("保温升级"), "Spec": ins, "Qty": 1, "RMB": get_p(ins, size)})
+    # 保温双语
+    ins = st.selectbox("Insulation / 保温材料", ['Rock Wool 50mm / 岩棉 50mm', 'Rock Wool 75mm / 岩棉 75mm', 'EPS 75mm / eps 75mm', 'PU 75mm / 聚氨酯 75mm'])
+    ins_cn = get_cn(ins)
+    if ins_cn != '岩棉 50mm': bill.append({"Cat": t_cat("装修"), "Item": t_item("保温升级"), "Spec": ins, "Qty": 1, "RMB": get_p(ins_cn, size)})
     
-    st.selectbox("Frame Color / 框架颜色", ['White/白色', 'Black/黑色', 'Grey/灰色', 'Custom/定制'])
-    wall_col_spec = st.selectbox("Special Wall Color / 墙板特殊颜色", ["No/不需要", "Yes/需要"], disabled=is_x)
-    if wall_col_spec == "Yes/需要":
+    st.selectbox("Frame Color / 框架颜色", ['White / 白色', 'Black / 黑色', 'Grey / 灰色', 'Custom / 定制'])
+    
+    wall_col_spec = st.selectbox("Special Wall Color / 墙板特殊颜色", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+    if "Yes" in wall_col_spec:
          bill.append({"Cat": t_cat("装修"), "Item": t_item("墙板特殊颜色"), "Spec": "Yes", "Qty": 1, "RMB": get_p('墙板特殊颜色', size)})
 
 with c2:
-    in_wall = st.selectbox("Inner Wall / 内墙", ['普通内墙板', '碳晶板(8mm)', '竹木纤维板'])
-    if in_wall != '普通内墙板': bill.append({"Cat": t_cat("装修"), "Item": t_item("内墙升级"), "Spec": in_wall, "Qty": 1, "RMB": get_p(in_wall, size)})
+    # 内墙双语
+    in_wall = st.selectbox("Inner Wall / 内墙", ['Normal / 普通内墙板', 'Carbon Crystal(8mm) / 碳晶板(8mm)', 'Bamboo Fiber / 竹木纤维板'])
+    in_wall_cn = get_cn(in_wall)
+    if in_wall_cn != '普通内墙板': bill.append({"Cat": t_cat("装修"), "Item": t_item("内墙升级"), "Spec": in_wall, "Qty": 1, "RMB": get_p(in_wall_cn, size)})
     
-    out_wall = st.selectbox("Outer Wall / 外墙", ['普通外墙板', '金属雕花板', '长城板'], disabled=(is_x or '长城板' in RESTRICTED_FOR_X and is_x))
-    if out_wall != '普通外墙板' and not is_x: bill.append({"Cat": t_cat("装修"), "Item": t_item("外墙升级"), "Spec": out_wall, "Qty": 1, "RMB": get_p(out_wall, size)})
+    # 外墙双语
+    out_wall = st.selectbox("Outer Wall / 外墙", ['Normal / 普通外墙板', 'Metal Carved / 金属雕花板', 'WPC Great Wall / 长城板'], disabled=(is_x or '长城板' in RESTRICTED_FOR_X and is_x))
+    out_wall_cn = get_cn(out_wall)
+    if out_wall_cn != '普通外墙板' and not is_x: bill.append({"Cat": t_cat("装修"), "Item": t_item("外墙升级"), "Spec": out_wall, "Qty": 1, "RMB": get_p(out_wall_cn, size)})
 
 with c3:
-    floor = st.selectbox("Floor / 地板", ['地板革(2mm)', '石塑锁扣地板(4cm)'])
-    if floor != '地板革(2mm)': bill.append({"Cat": t_cat("装修"), "Item": t_item("地板升级"), "Spec": floor, "Qty": 1, "RMB": get_p(floor, size)})
+    # 地板双语
+    floor = st.selectbox("Floor / 地板", ['Vinyl(2mm) / 地板革(2mm)', 'SPC(4cm) / 石塑锁扣地板(4cm)'])
+    floor_cn = get_cn(floor)
+    if floor_cn != '地板革(2mm)': bill.append({"Cat": t_cat("装修"), "Item": t_item("地板升级"), "Spec": floor, "Qty": 1, "RMB": get_p(floor_cn, size)})
 
 # --- 3. Doors & Windows ---
 st.markdown("---")
 st.subheader("3. Doors & Windows / 门窗")
 c1, c2, c3 = st.columns(3)
 with c1:
-    d_main = st.selectbox("Main Door / 入户门", [
-        '肯德基双开门', '肯德基单开门', '防盗门1', '防盗门2(钛镁合金)', 
-        '断桥铝对开门', '断桥铝单开门', '电动卷帘门', '断桥铝格格单开门', '钢制单开', '定制'])
-    bill.append({"Cat": t_cat("门窗"), "Item": t_item("入户门"), "Spec": d_main, "Qty": 1, "RMB": get_p(d_main, size)})
+    d_main_opts = [
+        'Alum. Glass Door / 肯德基双开门', 'Single Alum. Glass Door / 肯德基单开门', 
+        'Steel Door 1 / 防盗门1', 'Ti-Mg Alloy Door / 防盗门2(钛镁合金)', 
+        'Thermal Break Double / 断桥铝对开门', 'Thermal Break Single / 断桥铝单开门', 
+        'Electric Rolling / 电动卷帘门', 'Thermal Break Grid / 断桥铝格格单开门', 
+        'Steel Single / 钢制单开', 'Custom / 定制'
+    ]
+    d_main = st.selectbox("Main Door / 入户门", d_main_opts)
+    bill.append({"Cat": t_cat("门窗"), "Item": t_item("入户门"), "Spec": d_main, "Qty": 1, "RMB": get_p(get_cn(d_main), size)})
 
 with c2:
-    d_inner = st.selectbox("Inner Door / 室内门", ['标配室内门', '高端铝框木芯门', '谷仓门', '木芯门', '定制'])
-    if d_inner != '标配室内门': bill.append({"Cat": t_cat("门窗"), "Item": t_item("室内门"), "Spec": d_inner, "Qty": 1, "RMB": get_p(d_inner, size)})
+    d_inner_opts = ['Standard / 标配室内门', 'High-end Alum. Frame / 高端铝框木芯门', 'Barn Door / 谷仓门', 'Wood Core / 木芯门', 'Custom / 定制']
+    d_inner = st.selectbox("Inner Door / 室内门", d_inner_opts)
+    d_inner_cn = get_cn(d_inner)
+    if d_inner_cn != '标配室内门': bill.append({"Cat": t_cat("门窗"), "Item": t_item("室内门"), "Spec": d_inner, "Qty": 1, "RMB": get_p(d_inner_cn, size)})
 
 with c3:
-    win = st.selectbox("Window / 窗户", ['断桥铝窗(不含纱窗)', '断桥铝推拉窗(含纱窗)', '铝合金推拉窗(含纱窗)', '塑钢平开窗', '塑钢推拉窗', '电动卷帘窗'])
+    win_opts = ['Thermal Break(No Screen) / 断桥铝窗(不含纱窗)', 'Thermal Break Sliding(w/ Screen) / 断桥铝推拉窗(含纱窗)', 
+                'Alum. Sliding(w/ Screen) / 铝合金推拉窗(含纱窗)', 'PVC Swing / 塑钢平开窗', 'PVC Sliding / 塑钢推拉窗', 'Electric Rolling / 电动卷帘窗']
+    win = st.selectbox("Window / 窗户", win_opts)
     w_qty = st.number_input("Window Qty / 窗户数量", 0, 10, 2)
-    if w_qty > 0: bill.append({"Cat": t_cat("门窗"), "Item": t_item("窗户"), "Spec": win, "Qty": w_qty, "RMB": get_p(win, size)})
+    if w_qty > 0: bill.append({"Cat": t_cat("门窗"), "Item": t_item("窗户"), "Spec": win, "Qty": w_qty, "RMB": get_p(get_cn(win), size)})
     
-    scr = st.selectbox("Screen / 纱窗", ['No/不要', 'Common/普通网', 'Steel/金刚网'])
-    if '不要' not in scr: bill.append({"Cat": t_cat("门窗"), "Item": t_item("纱窗"), "Spec": scr, "Qty": w_qty if w_qty > 0 else 1, "RMB": get_p(scr.split('/')[-1], size)})
+    scr = st.selectbox("Screen / 纱窗", ['No / 不要', 'Common / 普通网', 'Steel / 金刚网'])
+    scr_cn = get_cn(scr)
+    if '不要' not in scr_cn: bill.append({"Cat": t_cat("门窗"), "Item": t_item("纱窗"), "Spec": scr, "Qty": w_qty if w_qty > 0 else 1, "RMB": get_p(scr_cn, size)})
 
 # --- 4. Kitchen & Bath ---
 st.markdown("---")
 st.subheader("4. Kitchen & Bath / 厨卫")
 c1, c2 = st.columns(2)
 with c1:
-    bath = st.selectbox("Bathroom / 卫生间", ['无', '干湿分离', '干湿分离(升级油砂玻璃)', '干湿分离(升级碳晶/竹木)', '扇形卫浴'], disabled=is_x)
-    if bath != '无' and not is_x: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("卫浴"), "Spec": bath, "Qty": 1, "RMB": get_p(bath, size)})
+    bath_opts = ['None / 无', 'Dry-Wet Separate / 干湿分离', 'Dry-Wet(Frosted Glass) / 干湿分离(升级油砂玻璃)', 
+                 'Dry-Wet(Carbon/Bamboo) / 干湿分离(升级碳晶/竹木)', 'Fan-shaped / 扇形卫浴']
+    bath = st.selectbox("Bathroom / 卫生间", bath_opts, disabled=is_x)
+    bath_cn = get_cn(bath)
+    if bath_cn != '无' and not is_x: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("卫浴"), "Spec": bath, "Qty": 1, "RMB": get_p(bath_cn, size)})
     
-    cab = st.selectbox("Cabinet / 橱柜", ['无', 'L橱柜+洗碗池', '黑色L橱柜+洗碗池'], disabled=is_x)
-    if cab != '无' and not is_x: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("橱柜"), "Spec": cab, "Qty": 1, "RMB": get_p(cab, size)})
+    cab_opts = ['None / 无', 'L-Cabinet+Sink / L橱柜+洗碗池', 'Black L-Cabinet+Sink / 黑色L橱柜+洗碗池']
+    cab = st.selectbox("Cabinet / 橱柜", cab_opts, disabled=is_x)
+    cab_cn = get_cn(cab)
+    if cab_cn != '无' and not is_x: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("橱柜"), "Spec": cab, "Qty": 1, "RMB": get_p(cab_cn, size)})
 
 with c2:
     col_a, col_b = st.columns(2)
     with col_a:
-        # 1. 标题改成双语 "Upgrade Toilet / 升级马桶"
-        opt_toilet = st.selectbox("Upgrade Toilet / 升级马桶", ["No/不需要", "Yes/需要"], disabled=is_x)
-        if opt_toilet == "Yes/需要": bill.append({"Cat": t_cat("厨卫"), "Item": t_item("马桶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('马桶', size)})
+        opt_toilet = st.selectbox("Upgrade Toilet / 升级马桶", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+        if "Yes" in opt_toilet: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("马桶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('马桶', size)})
         
-        opt_heater = st.selectbox("Water Heater / 热水器", ["No/不需要", "Yes/需要"], disabled=is_x)
-        if opt_heater == "Yes/需要": bill.append({"Cat": t_cat("厨卫"), "Item": t_item("热水器"), "Spec": "Yes", "Qty": 1, "RMB": get_p('热水器', size)})
+        opt_heater = st.selectbox("Water Heater / 热水器", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+        if "Yes" in opt_heater: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("热水器"), "Spec": "Yes", "Qty": 1, "RMB": get_p('热水器', size)})
     with col_b:
-        opt_fan = st.selectbox("Exhaust Fan / 排气扇", ["No/不需要", "Yes/需要"], disabled=is_x)
-        if opt_fan == "Yes/需要": bill.append({"Cat": t_cat("厨卫"), "Item": t_item("排气扇"), "Spec": "Yes", "Qty": 1, "RMB": get_p('排气扇(200*200)', size)})
+        opt_fan = st.selectbox("Exhaust Fan / 排气扇", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+        if "Yes" in opt_fan: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("排气扇"), "Spec": "Yes", "Qty": 1, "RMB": get_p('排气扇(200*200)', size)})
         
-        opt_h_cab = st.selectbox("Hanging Cab / 吊柜", ["No/不需要", "Yes/需要"], disabled=is_x)
-        if opt_h_cab == "Yes/需要": bill.append({"Cat": t_cat("厨卫"), "Item": t_item("吊柜"), "Spec": "Yes", "Qty": 1, "RMB": get_p('吊柜', size)})
+        opt_h_cab = st.selectbox("Hanging Cab / 吊柜", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+        if "Yes" in opt_h_cab: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("吊柜"), "Spec": "Yes", "Qty": 1, "RMB": get_p('吊柜', size)})
 
 # --- 5. Upgrades & Structure ---
 st.markdown("---")
@@ -304,36 +336,36 @@ st.subheader("5. Upgrades & Structure / 结构与升级")
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    if st.selectbox("Roof Waterproof / 屋顶防水", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Roof Waterproof / 屋顶防水", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("屋顶防水"), "Spec": "Yes", "Qty": 1, "RMB": get_p('屋顶全贴防水卷材', size)})
     
-    if st.selectbox("PU Panel 75 / 聚氨酯板75", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("PU Panel 75 / 聚氨酯板75", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("聚氨酯板75"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯板75', size)})
         
-    if st.selectbox("Bottom PU(4cm) / 底部保温(4cm)", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Bottom PU(4cm) / 底部保温(4cm)", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("底部保温(4cm)"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯底部保温(4cm)', size)})
         
-    if st.selectbox("Bottom PU(Block) / 底部保温块", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Bottom PU(Block) / 底部保温块", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("底部保温(块)"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯底部保温(块)', size)})
 
 with c2:
-    if st.selectbox("Glass Wall / 玻璃幕墙", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Glass Wall / 玻璃幕墙", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("玻璃幕墙"), "Spec": "Yes", "Qty": 1, "RMB": get_p('玻璃幕墙', size)})
     
-    if st.selectbox("Terrace / 露台+屋顶", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Terrace / 露台+屋顶", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("露台+屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('室外露台+屋顶', size)})
         
-    if st.selectbox("Stairs / 楼梯", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Stairs / 楼梯", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("楼梯"), "Spec": "Yes", "Qty": 1, "RMB": get_p('楼梯', size)})
         
-    if st.selectbox("Full Roof / 通铺屋顶", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Full Roof / 通铺屋顶", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("通铺屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('通铺屋顶', size)})
 
 with c3:
-    if st.selectbox("Hydraulic Rod / 液压杆", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Hydraulic Rod / 液压杆", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("液压杆"), "Spec": "Yes", "Qty": 1, "RMB": get_p('液压杆+绞盘', size)})
         
-    if st.selectbox("Trailer / 拖车", ["No/不需要", "Yes/需要"]) == "Yes/需要":
+    if "Yes" in st.selectbox("Trailer / 拖车", ["No / 不需要", "Yes / 需要"]):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("拖车"), "Spec": "Yes", "Qty": 1, "RMB": get_p('拖车', size)})
     
     qty_foot = st.number_input("Foot Cups / 地脚杯 (Qty)", 0, 20, 0)
@@ -347,17 +379,15 @@ st.markdown("---")
 st.subheader("6. Top & Skirting / 顶部与踢脚")
 c1, c2 = st.columns(2)
 with c1:
-    top_opts = st.multiselect("Top Config / 顶部配置", ['顶部瓦楞板', '内顶金属雕花板', '平顶'], disabled=is_x)
+    top_opts = st.multiselect("Top Config / 顶部配置", ['Corrugated Board / 顶部瓦楞板', 'Metal Carved Board / 内顶金属雕花板', 'Flat Top / 平顶'], disabled=is_x)
     for t in top_opts:
-        bill.append({"Cat": t_cat("装修"), "Item": t, "Spec": "Yes", "Qty": 1, "RMB": get_p(t, size)})
+        t_cn = get_cn(t)
+        bill.append({"Cat": t_cat("装修"), "Item": t, "Spec": "Yes", "Qty": 1, "RMB": get_p(t_cn, size)})
 
 with c2:
-    skirt = st.selectbox("Skirting / 踢脚线", ['No/无', 'PVC', 'Mn-Al/锰铝合金'], disabled=is_x)
-    if '无' not in skirt and not is_x: 
-        # 提取 'Mn-Al/锰铝合金' 中的中文部分来查价，或者直接用原始 mapping
-        # 简单起见，这里做一个简单的映射查价
-        skirt_cn = skirt.split('/')[-1] if '/' in skirt else skirt
-        if skirt_cn == '无': skirt_cn = '无' # Fallback
+    skirt = st.selectbox("Skirting / 踢脚线", ['No / 无', 'PVC', 'Mn-Al / 锰铝合金'], disabled=is_x)
+    skirt_cn = get_cn(skirt)
+    if skirt_cn != '无' and not is_x: 
         bill.append({"Cat": t_cat("装修"), "Item": t_item("踢脚线"), "Spec": skirt, "Qty": 1, "RMB": get_p(skirt_cn, size)})
 
 # --- 7. Certification ---
@@ -365,48 +395,40 @@ st.markdown("---")
 st.subheader("7. Certification / 认证")
 c1, c2, c3 = st.columns(3)
 with c1:
-    opt_wire = st.selectbox("Wire Cert / 电线认证", ["No/不需要", "Yes/需要"])
-    if opt_wire == "Yes/需要":
-        std = st.selectbox("Wire Std / 标准", ['EU/欧标', 'US/美标', 'AU/澳标'])
+    opt_wire = st.selectbox("Wire Cert / 电线认证", ["No / 不需要", "Yes / 需要"])
+    if "Yes" in opt_wire:
+        std = st.selectbox("Wire Std / 标准", ['EU / 欧标', 'US / 美标', 'AU / 澳标'])
         bill.append({"Cat": t_cat("认证"), "Item": t_item("认证电线"), "Spec": std, "Qty": 1, "RMB": get_p('认证电线', size)})
 with c2:
-    if st.selectbox("Socket Cert / 插座认证", ["No/不需要", "Yes/需要"]) == "Yes/需要":
+    if "Yes" in st.selectbox("Socket Cert / 插座认证", ["No / 不需要", "Yes / 需要"]):
         bill.append({"Cat": t_cat("认证"), "Item": t_item("插座认证"), "Spec": "Yes", "Qty": 1, "RMB": get_p('认证插座开关', size)})
-    if st.selectbox("Plumbing Cert / 上下水认证", ["No/不需要", "Yes/需要"], disabled=is_x) == "Yes/需要":
+    if "Yes" in st.selectbox("Plumbing Cert / 上下水认证", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("认证"), "Item": t_item("上下水认证"), "Spec": "Yes", "Qty": 1, "RMB": get_p('上下水认证', size)})
 with c3:
-    if st.selectbox("Light Cert / 灯具认证", ["No/不需要", "Yes/需要"]) == "Yes/需要":
+    if "Yes" in st.selectbox("Light Cert / 灯具认证", ["No / 不需要", "Yes / 需要"]):
         bill.append({"Cat": t_cat("认证"), "Item": t_item("灯具认证"), "Spec": "Yes", "Qty": 1, "RMB": get_p('认证灯', size)})
 
 # ==========================================
-# 5. 汇总与输出
+# 5. 汇总
 # ==========================================
 st.markdown("---")
 df_res = pd.DataFrame(bill)
 
 if not df_res.empty:
-    # 1. 计算总价
     df_res['Total_RMB'] = df_res['Qty'] * df_res['RMB']
     total_rmb = df_res['Total_RMB'].sum()
     total_usd = (total_rmb / exchange_rate) * markup_rate
     
-    # 2. 计算有效期 (今天 + 7天)
     valid_date = date.today() + timedelta(days=7)
-    
-    # 3. 计算 FOB
     fob_price = total_usd + 900
 
-    # --- 显示区域 ---
+    # 结果显示
     st.header(f"💰 Total Price: $ {total_usd:,.2f}")
     
-    # [Requirement 3] 增加 EXW 和 有效期说明
-    st.caption(f"(EXW Price / 出厂价 | Price Validity: {valid_date} / 价格有效期至: {valid_date})")
+    # [Requirement 2] EXW 加大，用 H4
+    st.markdown(f"#### (EXW Price / 出厂价 | Price Validity: {valid_date} / 价格有效期至: {valid_date})")
     
-    # [Requirement 5] 底部增加 FOB
-    st.markdown(f"### 🚢 FOB Price / FOB 价格: $ {fob_price:,.2f}")
-    
-    # [Requirement 4] 英文左，中文右的配置清单
-    # 重命名列名以符合双语要求
+    # 配置清单表头英中对照
     df_display = df_res[['Cat', 'Item', 'Spec', 'Qty']].rename(columns={
         "Cat": "Category / 类别", 
         "Item": "Item / 项目", 
@@ -422,6 +444,9 @@ if not df_res.empty:
     else:
         with st.expander("📄 Configuration List / 配置清单", expanded=True):
             st.table(df_display)
+
+    # [Requirement 3] FOB 缩小，用 caption (灰色小字)
+    st.caption(f"🚢 FOB Price / FOB 价格 (含$900杂费): $ {fob_price:,.2f}")
+
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
-
