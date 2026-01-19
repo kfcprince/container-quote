@@ -239,7 +239,7 @@ bill = []
 st.subheader("1. Basic / 基础配置")
 c1, c2 = st.columns(2)
 with c1:
-    size = st.selectbox("Size / 房型尺寸", ['20FT', 'X折叠', 'F700', '10FT', '15FT', '30FT', '40FT'])
+    size = st.selectbox("Size / 房型尺寸", ['20FT', 'X-Folding / X折叠', 'F700', '10FT', '15FT', '30FT', '40FT'])
     bill.append({"Cat": t_cat("基础"), "Item": t_item("基础箱体"), "Spec": size, "Qty": 1, "RMB": get_p('基础箱体', size)})
 
 with c2:
@@ -477,3 +477,4 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
