@@ -175,11 +175,22 @@ def get_p(item_name, size):
 # 侧边栏 (Admin)
 # ==========================================
 st.sidebar.title("🔐 Admin / 管理后台")
-admin_pwd = st.sidebar.text_input("Password / 密码", type="password")
-IS_ADMIN = (admin_pwd == "HUAhan807810")
 
-if IS_ADMIN:
+# 使用 key 绑定输入框，这样“退出按钮”才能清空它
+admin_pwd = st.sidebar.text_input("Password / 密码", type="password", key="admin_pwd_input")
+
+# 初始化管理员状态
+IS_ADMIN = False
+
+if admin_pwd == "HUAhan807810":
+    IS_ADMIN = True
     st.sidebar.success("✅ Login Success / 已登录")
+    
+    # 新增：退出登录按钮
+    if st.sidebar.button("Logout / 退出登录"):
+        st.session_state.admin_pwd_input = ""  # 清空输入框内容
+        st.rerun()  # 立即刷新网页
+        
     st.sidebar.markdown("### Settings / 设置")
     exchange_rate = st.sidebar.number_input("Exchange Rate (RMB/USD)", 6.0, 8.0, 6.9, 0.05)
     markup_rate = st.sidebar.number_input("Markup / 利润系数", 1.0, 2.5, 1.2, 0.05)
@@ -201,7 +212,16 @@ if IS_ADMIN:
             mime="text/csv"
         )
     df_active = edited_df
+
+elif admin_pwd != "":
+    # 当输入了内容但密码错误时，显示错误提示
+    st.sidebar.error("❌ Incorrect Password / 密码错误")
+    exchange_rate = 6.9
+    markup_rate = 1.2
+    df_active = df_db
+    
 else:
+    # 初始未输入状态
     exchange_rate = 6.9
     markup_rate = 1.2
     df_active = df_db
@@ -450,4 +470,5 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
