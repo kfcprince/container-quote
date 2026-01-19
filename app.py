@@ -9,7 +9,7 @@ from datetime import date, timedelta
 CSV_FILE = "prices_v3.csv"
 columns = ['项目名称', '单位', 'X折叠', 'F700', '10FT', '15FT', '20FT', '30FT', '40FT']
 
-# 79 行原始数据 (作为备份和初始化)
+# 79 行原始数据 (已根据你的要求拆分露台)
 default_data = [
     ['无', '项', 0, 0, 0, 0, 0, 0, 0],
     ['不要', '项', 0, 0, 0, 0, 0, 0, 0],
@@ -87,7 +87,10 @@ default_data = [
     ['可调节大支撑腿', '个', 0, 100, 100, 100, 100, 100, 100],
     ['液压杆+绞盘', '套', 0, 500, 500, 500, 500, 500, 500],
     ['玻璃幕墙', '项', 0, 3200, 3200, 3200, 3200, 3200, 3200],
-    ['室外露台+屋顶', '项', 0, 4000, 4000, 4000, 4000, 4000, 4000],
+    # --- 这里是你的新露台数据 ---
+    ['露台', '项', 0, 3500, 3500, 3500, 3500, 3500, 3500],
+    ['露台顶', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
+    # ---------------------------
     ['楼梯', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
     ['拖车', '辆', 16000, 16000, 16000, 16000, 16000, 26000, 26000],
 ]
@@ -95,7 +98,7 @@ default_data = [
 RESTRICTED_FOR_X = [
     '屋顶全贴防水卷材', '聚氨酯板75', '聚氨酯底部保温(4cm)', '聚氨酯底部保温(块)', 
     '上下水认证', '马桶', '排气扇(200*200)', '热水器', '螺栓可调节支撑地脚杯', 
-    '可调节大支撑腿', '液压杆+绞盘', '玻璃幕墙', '室外露台+屋顶', '通铺屋顶', 
+    '可调节大支撑腿', '液压杆+绞盘', '玻璃幕墙', '露台', '露台顶', '通铺屋顶', 
     '楼梯', '墙板特殊颜色', '吊柜', '卫生间配置', '橱柜选择', 
     '踢脚线/顶角线/阴角线', '顶部瓦楞板', '内顶金属雕花板', '平顶', '长城板'
 ]
@@ -132,7 +135,8 @@ TRANS = {
     "底部保温(4cm)": "Bottom PU(4cm) / 底部保温",
     "底部保温(块)": "Bottom PU(Block) / 底部保温块",
     "玻璃幕墙": "Glass Wall / 玻璃幕墙",
-    "露台+屋顶": "Terrace / 露台+屋顶",
+    "露台": "Outdoor Terrace / 露台 (2m Wide)",
+    "露台顶": "Terrace Roof / 露台顶 (2m Wide)",
     "楼梯": "Stairs / 楼梯",
     "通铺屋顶": "Full Roof / 通铺屋顶",
     "液压杆": "Hydraulic Rod / 液压杆",
@@ -179,14 +183,13 @@ st.sidebar.title("🔐 Admin / 管理后台")
 # 使用 key 绑定输入框，这样“退出按钮”才能清空它
 admin_pwd = st.sidebar.text_input("Password / 密码", type="password", key="admin_pwd_input")
 
-# 初始化管理员状态
 IS_ADMIN = False
 
 if admin_pwd == "HUAhan807810":
     IS_ADMIN = True
     st.sidebar.success("✅ Login Success / 已登录")
     
-    # 新增：退出登录按钮
+    # 退出登录按钮
     if st.sidebar.button("Logout / 退出登录"):
         st.session_state.admin_pwd_input = ""  # 清空输入框内容
         st.rerun()  # 立即刷新网页
@@ -237,18 +240,15 @@ st.subheader("1. Basic / 基础配置")
 c1, c2 = st.columns(2)
 with c1:
     size = st.selectbox("Size / 房型尺寸", ['20FT', 'X折叠', 'F700', '10FT', '15FT', '30FT', '40FT'])
-    # 基础箱体没有双语列表，因为它是核心Key，但显示时用 t_item 翻译了
     bill.append({"Cat": t_cat("基础"), "Item": t_item("基础箱体"), "Spec": size, "Qty": 1, "RMB": get_p('基础箱体', size)})
 
 with c2:
-    # 布局列表双语化
     if size == "X折叠": opts = ['Empty / 空箱', 'Custom Qty / 房间数量定制']
     elif size == "40FT": opts = ['Empty / 空箱', '1 Bedroom / 一室', '2 Bedroom / 两室', '3 Bedroom / 三室', '4 Bedroom / 四室', '5 Bedroom / 五室', '6 Bedroom / 六室', 'Custom Qty / 房间数量定制']
     else: opts = ['Empty / 空箱', '1 Bedroom / 一室', '2 Bedroom / 两室', '3 Bedroom / 三室', '4 Bedroom / 四室', 'Custom Qty / 房间数量定制']
     
     layout = st.selectbox("Layout / 内部布局", opts)
-    layout_cn = get_cn(layout) # 提取中文查价
-    
+    layout_cn = get_cn(layout)
     if layout_cn not in ['空箱', '房间数量定制']:
         bill.append({"Cat": t_cat("基础"), "Item": t_item("内部布局"), "Spec": layout, "Qty": 1, "RMB": get_p(layout_cn, size)})
 
@@ -259,7 +259,6 @@ is_x = (size == "X折叠")
 
 c1, c2, c3 = st.columns(3)
 with c1:
-    # 保温双语
     ins = st.selectbox("Insulation / 保温材料", ['Rock Wool 50mm / 岩棉 50mm', 'Rock Wool 75mm / 岩棉 75mm', 'EPS 75mm / eps 75mm', 'PU 75mm / 聚氨酯 75mm'])
     ins_cn = get_cn(ins)
     if ins_cn != '岩棉 50mm': bill.append({"Cat": t_cat("装修"), "Item": t_item("保温升级"), "Spec": ins, "Qty": 1, "RMB": get_p(ins_cn, size)})
@@ -271,18 +270,15 @@ with c1:
          bill.append({"Cat": t_cat("装修"), "Item": t_item("墙板特殊颜色"), "Spec": "Yes", "Qty": 1, "RMB": get_p('墙板特殊颜色', size)})
 
 with c2:
-    # 内墙双语
     in_wall = st.selectbox("Inner Wall / 内墙", ['Normal / 普通内墙板', 'Carbon Crystal(8mm) / 碳晶板(8mm)', 'Bamboo Fiber / 竹木纤维板'])
     in_wall_cn = get_cn(in_wall)
     if in_wall_cn != '普通内墙板': bill.append({"Cat": t_cat("装修"), "Item": t_item("内墙升级"), "Spec": in_wall, "Qty": 1, "RMB": get_p(in_wall_cn, size)})
     
-    # 外墙双语
     out_wall = st.selectbox("Outer Wall / 外墙", ['Normal / 普通外墙板', 'Metal Carved / 金属雕花板', 'WPC Great Wall / 长城板'], disabled=(is_x or '长城板' in RESTRICTED_FOR_X and is_x))
     out_wall_cn = get_cn(out_wall)
     if out_wall_cn != '普通外墙板' and not is_x: bill.append({"Cat": t_cat("装修"), "Item": t_item("外墙升级"), "Spec": out_wall, "Qty": 1, "RMB": get_p(out_wall_cn, size)})
 
 with c3:
-    # 地板双语
     floor = st.selectbox("Floor / 地板", ['Vinyl(2mm) / 地板革(2mm)', 'SPC(4cm) / 石塑锁扣地板(4cm)'])
     floor_cn = get_cn(floor)
     if floor_cn != '地板革(2mm)': bill.append({"Cat": t_cat("装修"), "Item": t_item("地板升级"), "Spec": floor, "Qty": 1, "RMB": get_p(floor_cn, size)})
@@ -305,8 +301,12 @@ with c1:
 with c2:
     d_inner_opts = ['Standard / 标配室内门', 'High-end Alum. Frame / 高端铝框木芯门', 'Barn Door / 谷仓门', 'Wood Core / 木芯门', 'Custom / 定制']
     d_inner = st.selectbox("Inner Door / 室内门", d_inner_opts)
+    
+    # [修改] 室内门增加数量逻辑
+    d_inner_qty = st.number_input("Inner Door Qty / 室内门数量", 0, 10, 1 if "Standard" not in d_inner else 0)
     d_inner_cn = get_cn(d_inner)
-    if d_inner_cn != '标配室内门': bill.append({"Cat": t_cat("门窗"), "Item": t_item("室内门"), "Spec": d_inner, "Qty": 1, "RMB": get_p(d_inner_cn, size)})
+    if d_inner_cn != '标配室内门' and d_inner_qty > 0: 
+        bill.append({"Cat": t_cat("门窗"), "Item": t_item("室内门"), "Spec": d_inner, "Qty": d_inner_qty, "RMB": get_p(d_inner_cn, size)})
 
 with c3:
     win_opts = ['Thermal Break(No Screen) / 断桥铝窗(不含纱窗)', 'Thermal Break Sliding(w/ Screen) / 断桥铝推拉窗(含纱窗)', 
@@ -369,11 +369,18 @@ with c1:
         bill.append({"Cat": t_cat("升级"), "Item": t_item("底部保温(块)"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯底部保温(块)', size)})
 
 with c2:
-    if "Yes" in st.selectbox("Glass Wall / 玻璃幕墙", ["No / 不需要", "Yes / 需要"], disabled=is_x):
-        bill.append({"Cat": t_cat("结构"), "Item": t_item("玻璃幕墙"), "Spec": "Yes", "Qty": 1, "RMB": get_p('玻璃幕墙', size)})
+    # [修改] 玻璃幕墙增加数量逻辑
+    g_wall_opt = st.selectbox("Glass Wall / 玻璃幕墙", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+    if "Yes" in g_wall_opt:
+        g_wall_qty = st.number_input("Glass Wall Qty / 玻璃幕墙数量", 1, 10, 1)
+        bill.append({"Cat": t_cat("结构"), "Item": t_item("玻璃幕墙"), "Spec": "Yes", "Qty": g_wall_qty, "RMB": get_p('玻璃幕墙', size)})
     
-    if "Yes" in st.selectbox("Terrace / 露台+屋顶", ["No / 不需要", "Yes / 需要"], disabled=is_x):
-        bill.append({"Cat": t_cat("结构"), "Item": t_item("露台+屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('室外露台+屋顶', size)})
+    # [修改] 露台拆分逻辑
+    if "Yes" in st.selectbox("Outdoor Terrace / 露台 (2m Wide)", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+        bill.append({"Cat": t_cat("结构"), "Item": t_item("露台"), "Spec": "2m Wide", "Qty": 1, "RMB": get_p('露台', size)})
+    
+    if "Yes" in st.selectbox("Terrace Roof / 露台顶 (2m Wide)", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+        bill.append({"Cat": t_cat("结构"), "Item": t_item("露台顶"), "Spec": "2m Wide", "Qty": 1, "RMB": get_p('露台顶', size)})
         
     if "Yes" in st.selectbox("Stairs / 楼梯", ["No / 不需要", "Yes / 需要"], disabled=is_x):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("楼梯"), "Spec": "Yes", "Qty": 1, "RMB": get_p('楼梯', size)})
@@ -382,8 +389,10 @@ with c2:
         bill.append({"Cat": t_cat("结构"), "Item": t_item("通铺屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('通铺屋顶', size)})
 
 with c3:
-    if "Yes" in st.selectbox("Hydraulic Rod / 液压杆", ["No / 不需要", "Yes / 需要"], disabled=is_x):
-        bill.append({"Cat": t_cat("结构"), "Item": t_item("液压杆"), "Spec": "Yes", "Qty": 1, "RMB": get_p('液压杆+绞盘', size)})
+    # [修改] 液压杆改为数量逻辑 (0-4)
+    h_rod_qty = st.number_input("Hydraulic Rod Qty / 液压杆数量 (0-4)", 0, 4, 0, disabled=is_x)
+    if h_rod_qty > 0:
+        bill.append({"Cat": t_cat("结构"), "Item": t_item("液压杆"), "Spec": f"{h_rod_qty} Set(s)", "Qty": h_rod_qty, "RMB": get_p('液压杆+绞盘', size)})
         
     if "Yes" in st.selectbox("Trailer / 拖车", ["No / 不需要", "Yes / 需要"]):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("拖车"), "Spec": "Yes", "Qty": 1, "RMB": get_p('拖车', size)})
@@ -445,7 +454,6 @@ if not df_res.empty:
     # 结果显示
     st.header(f"💰 Total Price: $ {total_usd:,.2f}")
     
-    # [Requirement 2] EXW 加大，用 H4
     st.markdown(f"#### (EXW Price / 出厂价 | Price Validity: {valid_date} / 价格有效期至: {valid_date})")
     
     # 配置清单表头英中对照
@@ -465,10 +473,7 @@ if not df_res.empty:
         with st.expander("📄 Configuration List / 配置清单", expanded=True):
             st.table(df_display)
 
-    # [Requirement 3] FOB 缩小，用 caption (灰色小字)
-    st.caption(f"🚢 FOB Price / FOB 价格: $ {fob_price:,.2f}")
+    st.caption(f"🚢 FOB Price / FOB 价格 (含$900杂费): $ {fob_price:,.2f}")
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
-
-
