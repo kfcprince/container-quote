@@ -473,8 +473,9 @@ if not df_res.empty:
         with st.expander("📄 Configuration List / 配置清单", expanded=True):
             st.table(df_display)
 
-    st.caption(f"🚢 FOB Price / FOB 价格 (含$900杂费): $ {fob_price:,.2f}")
+    st.caption(f"🚢 FOB Price / FOB 价格 : $ {fob_price:,.2f}")
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
