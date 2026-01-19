@@ -158,13 +158,7 @@ def get_cn(text):
         return text.split("/")[-1].strip()
     return text
 
-# 替换后的新代码：
-st.set_page_config(
-    page_title="Global Quotation System",  # 浏览器标签页标题
-    page_icon="static/logo.png",           # 浏览器标签页的小图标 (Favicon)
-    layout="wide",                         # 宽屏布局
-    logo="https://www.welluckyhouse.com/uploadfile/202509/ffb6cb59063c1c1.webp"                 # 【重点】网页右上角显示的 Logo 图片路径
-)
+
 
 # 初始化数据
 if not os.path.exists(CSV_FILE):
@@ -483,6 +477,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
