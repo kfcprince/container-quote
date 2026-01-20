@@ -313,6 +313,7 @@ st.markdown("---")
 st.subheader("3. Doors & Windows / 门窗")
 c1, c2, c3 = st.columns(3)
 with c1:
+    # [已更新] 这里是最新的专业版翻译列表
     d_main_opts = [
         'Commercial Alum. Door (Double) / 肯德基双开门', 
         'Commercial Alum. Door (Single) / 肯德基单开门', 
@@ -325,9 +326,8 @@ with c1:
         'Single Steel Door / 钢制单开', 
         'Custom / 定制'
     ]
-    ]
-    
     d_main = st.selectbox("Main Door / 入户门", d_main_opts)
+    # 注意：这里我们用 get_cn(d_main) 提取中文去查价
     bill.append({"Cat": t_cat("门窗"), "Item": t_item("入户门"), "Spec": d_main, "Qty": 1, "RMB": get_p(get_cn(d_main), size)})
 
 with c2:
@@ -538,6 +538,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
