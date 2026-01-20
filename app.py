@@ -314,7 +314,6 @@ st.subheader("3. Doors & Windows / 门窗")
 c1, c2, c3 = st.columns(3)
 with c1:
     d_main_opts = [
-        d_main_opts = [
         'Commercial Alum. Door (Double) / 肯德基双开门', 
         'Commercial Alum. Door (Single) / 肯德基单开门', 
         'Steel Security Door (Type A) / 防盗门1', 
@@ -325,6 +324,7 @@ with c1:
         'Thermal Break Door w/ Grids / 断桥铝格格单开门', 
         'Single Steel Door / 钢制单开', 
         'Custom / 定制'
+    ]
     ]
     
     d_main = st.selectbox("Main Door / 入户门", d_main_opts)
@@ -538,6 +538,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
