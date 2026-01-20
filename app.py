@@ -9,8 +9,7 @@ from datetime import date, timedelta
 st.set_page_config(
     page_title="Global Quotation System",
     page_icon="🏗️",
-    layout="wide"   # 必须保留 wide，然后用下面的 CSS 来限制宽度
-    # logo=...      # 这一行已经被我删掉了，不会再报错了！
+    layout="wide"   # 保持 wide，方便背景铺满
 )
 
 # ==========================================
@@ -246,6 +245,9 @@ else:
 # ==========================================
 # 主界面
 # ==========================================
+
+st.image("static/logo.png", width=300)
+
 st.title("🏠 Container House Quotation")
 bill = []
 
@@ -529,6 +531,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
