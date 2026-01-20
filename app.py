@@ -7,8 +7,8 @@ from datetime import date, timedelta
 # 0. 页面初始化配置
 # ==========================================
 st.set_page_config(
-    page_title="Global Quotation System",
-    page_icon="🛋️",
+    page_title="Quotation System",
+    page_icon="🏠",
     layout="wide"   # 保持 wide，方便背景铺满
 )
 
@@ -246,9 +246,7 @@ else:
 # 主界面
 # ==========================================
 
-st.image("static/logo.png", width=200)
-
-st.title("🏠 Container House Quotation")
+st.title("📋 Container House Quotation")
 bill = []
 
 # --- 1. Basic ---
@@ -538,6 +536,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
