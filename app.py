@@ -344,7 +344,7 @@ with c3:
 # --- 4. Kitchen & Bath ---
 st.markdown("---")
 st.subheader("4. Kitchen & Bath / 厨卫")
-# [新规则] 如果是 X折叠 或 F700，厨卫全冻结
+# 如果是 X折叠 或 F700，厨卫全冻结
 disable_kb = (is_x or is_f700)
 
 c1, c2 = st.columns(2)
@@ -363,11 +363,10 @@ with c1:
 with c2:
     col_a, col_b = st.columns(2)
     with col_a:
-        opt_toilet = st.selectbox("Upgrade Toilet / 升级马桶", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
-        if "Yes" in opt_toilet and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("马桶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('马桶', size)})
-        
+        # [修改点] 原先这里的马桶代码已被删除
         opt_heater = st.selectbox("Water Heater / 热水器", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
         if "Yes" in opt_heater and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("热水器"), "Spec": "Yes", "Qty": 1, "RMB": get_p('热水器', size)})
+        
     with col_b:
         opt_fan = st.selectbox("Exhaust Fan / 排气扇", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
         if "Yes" in opt_fan and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("排气扇"), "Spec": "Yes", "Qty": 1, "RMB": get_p('排气扇(200*200)', size)})
@@ -485,6 +484,13 @@ with c3:
     if "Yes" in st.selectbox("Light Cert / 灯具认证", ["No / 不需要", "Yes / 需要"]):
         bill.append({"Cat": t_cat("认证"), "Item": t_item("灯具认证"), "Spec": "Yes", "Qty": 1, "RMB": get_p('认证灯', size)})
 
+    # [新增点] 这里是搬家过来的马桶选项
+    # 逻辑：X折叠冻结 (disabled=is_x)
+    opt_toilet_cert = st.selectbox("Toilet / 马桶", ["No / 不需要", "Yes / 需要"], disabled=is_x)
+    if "Yes" in opt_toilet_cert and not is_x:
+        # 注意：这里我们依然用 "马桶" 这个 key 去查价
+        bill.append({"Cat": t_cat("认证"), "Item": t_item("马桶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('马桶', size)})
+
 # ==========================================
 # 5. 汇总
 # ==========================================
@@ -523,6 +529,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
