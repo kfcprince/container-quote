@@ -8,7 +8,7 @@ from datetime import date, timedelta
 # ==========================================
 st.set_page_config(
     page_title="Global Quotation System",
-    page_icon="🏗️",
+    page_icon="static/logo.png",
     layout="wide"   # 保持 wide，方便背景铺满
 )
 
@@ -531,6 +531,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
