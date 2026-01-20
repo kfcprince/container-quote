@@ -156,12 +156,6 @@ def get_cn(text):
         return text.split("/")[-1].strip()
     return text
 
-st.set_page_config(
-    page_title="Global Quotation System",
-    page_icon="🏗️",
-    layout="wide",
-    logo="https://www.welluckyhouse.com/uploadfile/202509/ffb6cb59063c1c1.webp"
-)
 
 # 初始化数据
 if not os.path.exists(CSV_FILE):
@@ -489,3 +483,4 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
