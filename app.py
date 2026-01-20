@@ -388,18 +388,26 @@ with c2:
         bill.append({"Cat": t_cat("结构"), "Item": t_item("通铺屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('通铺屋顶', size)})
 
 with c3:
+    # 1. 液压杆 (X折叠本身就需要液压杆展开，所以这里通常保持可选，或者根据你们实际情况。
+    #    但之前的代码里 disable_struct = is_x，意味着 X折叠时这一项是冻结的。
+    #    如果你希望 X折叠时液压杆也冻结，保持原样即可。如果不希望，把 disabled去掉)
     h_rod_qty = st.number_input("Hydraulic Rod Qty / 液压杆数量 (0-4)", 0, 4, 0, disabled=disable_struct)
     if h_rod_qty > 0 and not disable_struct:
         bill.append({"Cat": t_cat("结构"), "Item": t_item("液压杆"), "Spec": f"{h_rod_qty} Set(s)", "Qty": h_rod_qty, "RMB": get_p('液压杆+绞盘', size)})
         
+    # 2. 拖车 (通常 X折叠也可以放拖车上，所以这里一般不冻结，看你需求)
     if "Yes" in st.selectbox("Trailer / 拖车", ["No / 不需要", "Yes / 需要"]):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("拖车"), "Spec": "Yes", "Qty": 1, "RMB": get_p('拖车', size)})
     
-    qty_foot = st.number_input("Foot Cups / 地脚杯 (Qty)", 0, 20, 0)
-    if qty_foot > 0: bill.append({"Cat": t_cat("配件"), "Item": t_item("地脚杯"), "Spec": "Yes", "Qty": qty_foot, "RMB": get_p('螺栓可调节支撑地脚杯', size)})
+    # 3. [修改重点] 地脚杯 -> 增加 disabled=is_x
+    qty_foot = st.number_input("Foot Cups / 地脚杯 (Qty)", 0, 20, 0, disabled=is_x)
+    if qty_foot > 0: 
+        bill.append({"Cat": t_cat("配件"), "Item": t_item("地脚杯"), "Spec": "Yes", "Qty": qty_foot, "RMB": get_p('螺栓可调节支撑地脚杯', size)})
     
-    qty_leg = st.number_input("Support Legs / 支撑腿 (Qty)", 0, 20, 0)
-    if qty_leg > 0: bill.append({"Cat": t_cat("配件"), "Item": t_item("支撑腿"), "Spec": "Yes", "Qty": qty_leg, "RMB": get_p('可调节大支撑腿', size)})
+    # 4. [修改重点] 支撑腿 -> 增加 disabled=is_x
+    qty_leg = st.number_input("Support Legs / 支撑腿 (Qty)", 0, 20, 0, disabled=is_x)
+    if qty_leg > 0: 
+        bill.append({"Cat": t_cat("配件"), "Item": t_item("支撑腿"), "Spec": "Yes", "Qty": qty_leg, "RMB": get_p('可调节大支撑腿', size)})
 
 # --- 6. Top & Skirting ---
 st.markdown("---")
@@ -483,4 +491,5 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
