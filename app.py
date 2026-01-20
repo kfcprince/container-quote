@@ -314,12 +314,19 @@ st.subheader("3. Doors & Windows / 门窗")
 c1, c2, c3 = st.columns(3)
 with c1:
     d_main_opts = [
-        'Alum. Glass Door / 肯德基双开门', 'Single Alum. Glass Door / 肯德基单开门', 
-        'Steel Door 1 / 防盗门1', 'Ti-Mg Alloy Door / 防盗门2(钛镁合金)', 
-        'Thermal Break Double / 断桥铝对开门', 'Thermal Break Single / 断桥铝单开门', 
-        'Electric Rolling / 电动卷帘门', 'Thermal Break Grid / 断桥铝格格单开门', 
-        'Steel Single / 钢制单开', 'Custom / 定制'
+        d_main_opts = [
+        'Commercial Alum. Door (Double) / 肯德基双开门', 
+        'Commercial Alum. Door (Single) / 肯德基单开门', 
+        'Steel Security Door (Type A) / 防盗门1', 
+        'Ti-Mg Alloy Security Door / 防盗门2(钛镁合金)', 
+        'Thermal Break Alum. Door (Double) / 断桥铝对开门', 
+        'Thermal Break Alum. Door (Single) / 断桥铝单开门', 
+        'Electric Roller Shutter / 电动卷帘门', 
+        'Thermal Break Door w/ Grids / 断桥铝格格单开门', 
+        'Single Steel Door / 钢制单开', 
+        'Custom / 定制'
     ]
+    
     d_main = st.selectbox("Main Door / 入户门", d_main_opts)
     bill.append({"Cat": t_cat("门窗"), "Item": t_item("入户门"), "Spec": d_main, "Qty": 1, "RMB": get_p(get_cn(d_main), size)})
 
@@ -531,6 +538,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
