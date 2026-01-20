@@ -4,6 +4,33 @@ import os
 from datetime import date, timedelta
 
 # ==========================================
+# 0. 页面初始化配置
+# ==========================================
+st.set_page_config(
+    page_title="Global Quotation System",
+    page_icon="🏗️",
+    layout="wide"   # 必须保留 wide，然后用下面的 CSS 来限制宽度
+    # logo=...      # 这一行已经被我删掉了，不会再报错了！
+)
+
+# ==========================================
+# CSS 魔法：强制限制内容宽度为 1100px
+# ==========================================
+st.markdown(
+    """
+    <style>
+    .block-container {
+        max-width: 1100px;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        margin: auto;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ==========================================
 # 1. 核心数据 (CSV结构)
 # ==========================================
 CSV_FILE = "prices_v3.csv"
@@ -491,5 +518,6 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
