@@ -94,7 +94,7 @@ default_data = [
     ['顶部瓦楞板', '套', 0, 150, 150, 150, 150, 150, 150],
     ['内顶金属雕花板', '套', 0, 200, 200, 200, 200, 200, 200],
     ['平顶', '套', 0, 100, 100, 100, 100, 100, 100],
-    ['通铺屋顶', '项', 0, 4000, 5000, 5000, 5000, 7500, 10000],
+    ['通铺屋顶', '项', 0, 0, 0, 0, 5500, 8500, 11000],
     ['认证电线', '项', 1000, 1000, 1000, 1000, 1000, 2000, 2000],
     ['认证插座开关', '项', 500, 500, 500, 500, 500, 1000, 1000],
     ['认证灯', '项', 350, 350, 350, 350, 350, 600, 600],
@@ -117,7 +117,7 @@ default_data = [
     ['露台', '项', 0, 3500, 3500, 3500, 3500, 3500, 3500],
     ['露台顶', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
     ['楼梯', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
-    ['拖车', '辆', 16000, 16000, 16000, 16000, 16000, 26000, 26000],
+    ['拖车', '辆', 0, 0, 0, 0, 15000, 23000, 24500],
 ]
 
 RESTRICTED_FOR_X = [
@@ -378,8 +378,15 @@ with c2:
 # --- 5. Upgrades & Structure ---
 st.markdown("---")
 st.subheader("5. Upgrades & Structure / 结构与升级")
-# [新规则] X折叠冻结所有结构选项 (F700 不受影响)
-disable_struct = is_x
+
+# 1. 定义冻结逻辑
+# X折叠全冻结 (除了F700不受影响)
+disable_struct = is_x 
+# [新规则] 通铺屋顶和拖车：只有 20FT, 30FT, 40FT 可选
+# 逻辑是：如果不是这三个尺寸，就冻结 (disabled=True)
+allow_opts = ['20FT', '30FT', '40FT']
+# 注意：这里我们用 size 变量 (它是纯中文Key，如 '20FT')
+disable_special = (size not in allow_opts)
 
 c1, c2, c3 = st.columns(3)
 
@@ -411,30 +418,28 @@ with c2:
     if "Yes" in st.selectbox("Stairs / 楼梯", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("楼梯"), "Spec": "Yes", "Qty": 1, "RMB": get_p('楼梯', size)})
         
-    if "Yes" in st.selectbox("Full Roof / 通铺屋顶", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
+    # [修改重点] 通铺屋顶：增加 disable_special 判断
+    # 如果是 X折叠(disable_struct) 或者 不是特定房型(disable_special)，都冻结
+    is_frozen_roof = disable_struct or disable_special
+    if "Yes" in st.selectbox("Full Roof / 通铺屋顶", ["No / 不需要", "Yes / 需要"], disabled=is_frozen_roof):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("通铺屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('通铺屋顶', size)})
 
 with c3:
-    # 1. 液压杆 (X折叠本身就需要液压杆展开，所以这里通常保持可选，或者根据你们实际情况。
-    #    但之前的代码里 disable_struct = is_x，意味着 X折叠时这一项是冻结的。
-    #    如果你希望 X折叠时液压杆也冻结，保持原样即可。如果不希望，把 disabled去掉)
     h_rod_qty = st.number_input("Hydraulic Rod Qty / 液压杆数量 (0-4)", 0, 4, 0, disabled=disable_struct)
     if h_rod_qty > 0 and not disable_struct:
         bill.append({"Cat": t_cat("结构"), "Item": t_item("液压杆"), "Spec": f"{h_rod_qty} Set(s)", "Qty": h_rod_qty, "RMB": get_p('液压杆+绞盘', size)})
         
-    # 2. 拖车 (通常 X折叠也可以放拖车上，所以这里一般不冻结，看你需求)
-    if "Yes" in st.selectbox("Trailer / 拖车", ["No / 不需要", "Yes / 需要"]):
+    # [修改重点] 拖车：增加 disable_special 判断
+    # 拖车只看房型限制，不一定要看 X折叠限制(虽然X折叠不在allow列表里，结果是一样的)
+    is_frozen_trailer = disable_special 
+    if "Yes" in st.selectbox("Trailer / 拖车", ["No / 不需要", "Yes / 需要"], disabled=is_frozen_trailer):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("拖车"), "Spec": "Yes", "Qty": 1, "RMB": get_p('拖车', size)})
     
-    # 3. [修改重点] 地脚杯 -> 增加 disabled=is_x
     qty_foot = st.number_input("Foot Cups / 地脚杯 (Qty)", 0, 20, 0, disabled=is_x)
-    if qty_foot > 0: 
-        bill.append({"Cat": t_cat("配件"), "Item": t_item("地脚杯"), "Spec": "Yes", "Qty": qty_foot, "RMB": get_p('螺栓可调节支撑地脚杯', size)})
+    if qty_foot > 0: bill.append({"Cat": t_cat("配件"), "Item": t_item("地脚杯"), "Spec": "Yes", "Qty": qty_foot, "RMB": get_p('螺栓可调节支撑地脚杯', size)})
     
-    # 4. [修改重点] 支撑腿 -> 增加 disabled=is_x
     qty_leg = st.number_input("Support Legs / 支撑腿 (Qty)", 0, 20, 0, disabled=is_x)
-    if qty_leg > 0: 
-        bill.append({"Cat": t_cat("配件"), "Item": t_item("支撑腿"), "Spec": "Yes", "Qty": qty_leg, "RMB": get_p('可调节大支撑腿', size)})
+    if qty_leg > 0: bill.append({"Cat": t_cat("配件"), "Item": t_item("支撑腿"), "Spec": "Yes", "Qty": qty_leg, "RMB": get_p('可调节大支撑腿', size)})
 
 # --- 6. Top & Skirting ---
 st.markdown("---")
@@ -518,6 +523,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
