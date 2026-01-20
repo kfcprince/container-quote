@@ -9,7 +9,7 @@ from datetime import date, timedelta
 CSV_FILE = "prices_v3.csv"
 columns = ['项目名称', '单位', 'X折叠', 'F700', '10FT', '15FT', '20FT', '30FT', '40FT']
 
-# 79 行原始数据 (已根据你的要求拆分露台)
+# 79 行原始数据 (含露台拆分)
 default_data = [
     ['无', '项', 0, 0, 0, 0, 0, 0, 0],
     ['不要', '项', 0, 0, 0, 0, 0, 0, 0],
@@ -87,10 +87,8 @@ default_data = [
     ['可调节大支撑腿', '个', 0, 100, 100, 100, 100, 100, 100],
     ['液压杆+绞盘', '套', 0, 500, 500, 500, 500, 500, 500],
     ['玻璃幕墙', '项', 0, 3200, 3200, 3200, 3200, 3200, 3200],
-    # --- 这里是你的新露台数据 ---
     ['露台', '项', 0, 3500, 3500, 3500, 3500, 3500, 3500],
     ['露台顶', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
-    # ---------------------------
     ['楼梯', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
     ['拖车', '辆', 16000, 16000, 16000, 16000, 16000, 26000, 26000],
 ]
@@ -158,7 +156,12 @@ def get_cn(text):
         return text.split("/")[-1].strip()
     return text
 
-
+st.set_page_config(
+    page_title="Global Quotation System",
+    page_icon="🏗️",
+    layout="wide",
+    logo="https://www.welluckyhouse.com/uploadfile/202509/ffb6cb59063c1c1.webp"
+)
 
 # 初始化数据
 if not os.path.exists(CSV_FILE):
@@ -179,21 +182,15 @@ def get_p(item_name, size):
 # 侧边栏 (Admin)
 # ==========================================
 st.sidebar.title("🔐 Admin / 管理后台")
-
-# 使用 key 绑定输入框，这样“退出按钮”才能清空它
 admin_pwd = st.sidebar.text_input("Password / 密码", type="password", key="admin_pwd_input")
-
 IS_ADMIN = False
 
 if admin_pwd == "HUAhan807810":
     IS_ADMIN = True
     st.sidebar.success("✅ Login Success / 已登录")
-    
-    # 退出登录按钮
     if st.sidebar.button("Logout / 退出登录"):
-        st.session_state.admin_pwd_input = ""  # 清空输入框内容
-        st.rerun()  # 立即刷新网页
-        
+        st.session_state.admin_pwd_input = ""
+        st.rerun()
     st.sidebar.markdown("### Settings / 设置")
     exchange_rate = st.sidebar.number_input("Exchange Rate (RMB/USD)", 6.0, 8.0, 6.9, 0.05)
     markup_rate = st.sidebar.number_input("Markup / 利润系数", 1.0, 2.5, 1.2, 0.05)
@@ -201,12 +198,10 @@ if admin_pwd == "HUAhan807810":
     with st.expander("🛠️ Price Editor / 底价管理", expanded=False):
         st.warning("临时修改，重启失效。请导出保存。")
         edited_df = st.data_editor(df_db, num_rows="dynamic", use_container_width=True, height=600)
-        
         if st.button("💾 Save (Temp) / 临时保存"):
             edited_df.to_csv(CSV_FILE, index=False, encoding='utf-8-sig')
             st.success("Saved! / 已保存")
             st.rerun()
-            
         st.markdown("---")
         st.download_button(
             label="📥 Export CSV / 导出价格表",
@@ -217,14 +212,12 @@ if admin_pwd == "HUAhan807810":
     df_active = edited_df
 
 elif admin_pwd != "":
-    # 当输入了内容但密码错误时，显示错误提示
     st.sidebar.error("❌ Incorrect Password / 密码错误")
     exchange_rate = 6.9
     markup_rate = 1.2
     df_active = df_db
     
 else:
-    # 初始未输入状态
     exchange_rate = 6.9
     markup_rate = 1.2
     df_active = df_db
@@ -239,7 +232,15 @@ bill = []
 st.subheader("1. Basic / 基础配置")
 c1, c2 = st.columns(2)
 with c1:
-    size = st.selectbox("Size / 房型尺寸", ['20FT', 'X-Folding / X折叠', 'F700', '10FT', '15FT', '30FT', '40FT'])
+    # 房型选择 (包含翻译)
+    size_opts = ['20FT', 'X-Folding / X折叠', 'F700', '10FT', '15FT', '30FT', '40FT']
+    size_sel = st.selectbox("Size / 房型尺寸", size_opts)
+    # 提取实际用于查价的 Key (如 "X折叠")
+    if "X-Folding" in size_sel:
+        size = "X折叠"
+    else:
+        size = size_sel
+        
     bill.append({"Cat": t_cat("基础"), "Item": t_item("基础箱体"), "Spec": size, "Qty": 1, "RMB": get_p('基础箱体', size)})
 
 with c2:
@@ -256,6 +257,7 @@ with c2:
 st.markdown("---")
 st.subheader("2. Decoration / 装修")
 is_x = (size == "X折叠")
+is_f700 = (size == "F700")  # 定义 F700 判断变量
 
 c1, c2, c3 = st.columns(3)
 with c1:
@@ -302,7 +304,6 @@ with c2:
     d_inner_opts = ['Standard / 标配室内门', 'High-end Alum. Frame / 高端铝框木芯门', 'Barn Door / 谷仓门', 'Wood Core / 木芯门', 'Custom / 定制']
     d_inner = st.selectbox("Inner Door / 室内门", d_inner_opts)
     
-    # [修改] 室内门增加数量逻辑
     d_inner_qty = st.number_input("Inner Door Qty / 室内门数量", 0, 10, 1 if "Standard" not in d_inner else 0)
     d_inner_cn = get_cn(d_inner)
     if d_inner_cn != '标配室内门' and d_inner_qty > 0: 
@@ -322,76 +323,79 @@ with c3:
 # --- 4. Kitchen & Bath ---
 st.markdown("---")
 st.subheader("4. Kitchen & Bath / 厨卫")
+# [新规则] 如果是 X折叠 或 F700，厨卫全冻结
+disable_kb = (is_x or is_f700)
+
 c1, c2 = st.columns(2)
 with c1:
     bath_opts = ['None / 无', 'Dry-Wet Separate / 干湿分离', 'Dry-Wet(Frosted Glass) / 干湿分离(升级油砂玻璃)', 
                  'Dry-Wet(Carbon/Bamboo) / 干湿分离(升级碳晶/竹木)', 'Fan-shaped / 扇形卫浴']
-    bath = st.selectbox("Bathroom / 卫生间", bath_opts, disabled=is_x)
+    bath = st.selectbox("Bathroom / 卫生间", bath_opts, disabled=disable_kb)
     bath_cn = get_cn(bath)
-    if bath_cn != '无' and not is_x: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("卫浴"), "Spec": bath, "Qty": 1, "RMB": get_p(bath_cn, size)})
+    if bath_cn != '无' and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("卫浴"), "Spec": bath, "Qty": 1, "RMB": get_p(bath_cn, size)})
     
     cab_opts = ['None / 无', 'L-Cabinet+Sink / L橱柜+洗碗池', 'Black L-Cabinet+Sink / 黑色L橱柜+洗碗池']
-    cab = st.selectbox("Cabinet / 橱柜", cab_opts, disabled=is_x)
+    cab = st.selectbox("Cabinet / 橱柜", cab_opts, disabled=disable_kb)
     cab_cn = get_cn(cab)
-    if cab_cn != '无' and not is_x: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("橱柜"), "Spec": cab, "Qty": 1, "RMB": get_p(cab_cn, size)})
+    if cab_cn != '无' and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("橱柜"), "Spec": cab, "Qty": 1, "RMB": get_p(cab_cn, size)})
 
 with c2:
     col_a, col_b = st.columns(2)
     with col_a:
-        opt_toilet = st.selectbox("Upgrade Toilet / 升级马桶", ["No / 不需要", "Yes / 需要"], disabled=is_x)
-        if "Yes" in opt_toilet: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("马桶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('马桶', size)})
+        opt_toilet = st.selectbox("Upgrade Toilet / 升级马桶", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
+        if "Yes" in opt_toilet and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("马桶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('马桶', size)})
         
-        opt_heater = st.selectbox("Water Heater / 热水器", ["No / 不需要", "Yes / 需要"], disabled=is_x)
-        if "Yes" in opt_heater: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("热水器"), "Spec": "Yes", "Qty": 1, "RMB": get_p('热水器', size)})
+        opt_heater = st.selectbox("Water Heater / 热水器", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
+        if "Yes" in opt_heater and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("热水器"), "Spec": "Yes", "Qty": 1, "RMB": get_p('热水器', size)})
     with col_b:
-        opt_fan = st.selectbox("Exhaust Fan / 排气扇", ["No / 不需要", "Yes / 需要"], disabled=is_x)
-        if "Yes" in opt_fan: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("排气扇"), "Spec": "Yes", "Qty": 1, "RMB": get_p('排气扇(200*200)', size)})
+        opt_fan = st.selectbox("Exhaust Fan / 排气扇", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
+        if "Yes" in opt_fan and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("排气扇"), "Spec": "Yes", "Qty": 1, "RMB": get_p('排气扇(200*200)', size)})
         
-        opt_h_cab = st.selectbox("Hanging Cab / 吊柜", ["No / 不需要", "Yes / 需要"], disabled=is_x)
-        if "Yes" in opt_h_cab: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("吊柜"), "Spec": "Yes", "Qty": 1, "RMB": get_p('吊柜', size)})
+        opt_h_cab = st.selectbox("Hanging Cab / 吊柜", ["No / 不需要", "Yes / 需要"], disabled=disable_kb)
+        if "Yes" in opt_h_cab and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("吊柜"), "Spec": "Yes", "Qty": 1, "RMB": get_p('吊柜', size)})
 
 # --- 5. Upgrades & Structure ---
 st.markdown("---")
 st.subheader("5. Upgrades & Structure / 结构与升级")
+# [新规则] X折叠冻结所有结构选项 (F700 不受影响)
+disable_struct = is_x
+
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    if "Yes" in st.selectbox("Roof Waterproof / 屋顶防水", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Roof Waterproof / 屋顶防水", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("屋顶防水"), "Spec": "Yes", "Qty": 1, "RMB": get_p('屋顶全贴防水卷材', size)})
     
-    if "Yes" in st.selectbox("PU Panel 75 / 聚氨酯板75", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("PU Panel 75 / 聚氨酯板75", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("聚氨酯板75"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯板75', size)})
         
-    if "Yes" in st.selectbox("Bottom PU(4cm) / 底部保温(4cm)", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Bottom PU(4cm) / 底部保温(4cm)", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("底部保温(4cm)"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯底部保温(4cm)', size)})
         
-    if "Yes" in st.selectbox("Bottom PU(Block) / 底部保温块", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Bottom PU(Block) / 底部保温块", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("升级"), "Item": t_item("底部保温(块)"), "Spec": "Yes", "Qty": 1, "RMB": get_p('聚氨酯底部保温(块)', size)})
 
 with c2:
-    # [修改] 玻璃幕墙增加数量逻辑
-    g_wall_opt = st.selectbox("Glass Wall / 玻璃幕墙", ["No / 不需要", "Yes / 需要"], disabled=is_x)
-    if "Yes" in g_wall_opt:
+    g_wall_opt = st.selectbox("Glass Wall / 玻璃幕墙", ["No / 不需要", "Yes / 需要"], disabled=disable_struct)
+    if "Yes" in g_wall_opt and not disable_struct:
         g_wall_qty = st.number_input("Glass Wall Qty / 玻璃幕墙数量", 1, 10, 1)
         bill.append({"Cat": t_cat("结构"), "Item": t_item("玻璃幕墙"), "Spec": "Yes", "Qty": g_wall_qty, "RMB": get_p('玻璃幕墙', size)})
     
-    # [修改] 露台拆分逻辑
-    if "Yes" in st.selectbox("Outdoor Terrace / 露台 (2m Wide)", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Outdoor Terrace / 露台 (2m Wide)", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("露台"), "Spec": "2m Wide", "Qty": 1, "RMB": get_p('露台', size)})
     
-    if "Yes" in st.selectbox("Terrace Roof / 露台顶 (2m Wide)", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Terrace Roof / 露台顶 (2m Wide)", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("露台顶"), "Spec": "2m Wide", "Qty": 1, "RMB": get_p('露台顶', size)})
         
-    if "Yes" in st.selectbox("Stairs / 楼梯", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Stairs / 楼梯", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("楼梯"), "Spec": "Yes", "Qty": 1, "RMB": get_p('楼梯', size)})
         
-    if "Yes" in st.selectbox("Full Roof / 通铺屋顶", ["No / 不需要", "Yes / 需要"], disabled=is_x):
+    if "Yes" in st.selectbox("Full Roof / 通铺屋顶", ["No / 不需要", "Yes / 需要"], disabled=disable_struct):
         bill.append({"Cat": t_cat("结构"), "Item": t_item("通铺屋顶"), "Spec": "Yes", "Qty": 1, "RMB": get_p('通铺屋顶', size)})
 
 with c3:
-    # [修改] 液压杆改为数量逻辑 (0-4)
-    h_rod_qty = st.number_input("Hydraulic Rod Qty / 液压杆数量 (0-4)", 0, 4, 0, disabled=is_x)
-    if h_rod_qty > 0:
+    h_rod_qty = st.number_input("Hydraulic Rod Qty / 液压杆数量 (0-4)", 0, 4, 0, disabled=disable_struct)
+    if h_rod_qty > 0 and not disable_struct:
         bill.append({"Cat": t_cat("结构"), "Item": t_item("液压杆"), "Spec": f"{h_rod_qty} Set(s)", "Qty": h_rod_qty, "RMB": get_p('液压杆+绞盘', size)})
         
     if "Yes" in st.selectbox("Trailer / 拖车", ["No / 不需要", "Yes / 需要"]):
@@ -406,17 +410,27 @@ with c3:
 # --- 6. Top & Skirting ---
 st.markdown("---")
 st.subheader("6. Top & Skirting / 顶部与踢脚")
+# [新规则] X折叠全冻结，F700部分冻结(平顶不可选)
+disable_top_all = is_x
+
 c1, c2 = st.columns(2)
 with c1:
-    top_opts = st.multiselect("Top Config / 顶部配置", ['Corrugated Board / 顶部瓦楞板', 'Metal Carved Board / 内顶金属雕花板', 'Flat Top / 平顶'], disabled=is_x)
+    # 动态生成顶部选项
+    raw_top_opts = ['Corrugated Board / 顶部瓦楞板', 'Metal Carved Board / 内顶金属雕花板', 'Flat Top / 平顶']
+    
+    # 如果是 F700，移除“平顶”
+    if is_f700:
+        raw_top_opts = [opt for opt in raw_top_opts if 'Flat Top' not in opt]
+        
+    top_opts = st.multiselect("Top Config / 顶部配置", raw_top_opts, disabled=disable_top_all)
     for t in top_opts:
         t_cn = get_cn(t)
         bill.append({"Cat": t_cat("装修"), "Item": t, "Spec": "Yes", "Qty": 1, "RMB": get_p(t_cn, size)})
 
 with c2:
-    skirt = st.selectbox("Skirting / 踢脚线", ['No / 无', 'PVC', 'Mn-Al / 锰铝合金'], disabled=is_x)
+    skirt = st.selectbox("Skirting / 踢脚线", ['No / 无', 'PVC', 'Mn-Al / 锰铝合金'], disabled=disable_top_all)
     skirt_cn = get_cn(skirt)
-    if skirt_cn != '无' and not is_x: 
+    if skirt_cn != '无' and not disable_top_all: 
         bill.append({"Cat": t_cat("装修"), "Item": t_item("踢脚线"), "Spec": skirt, "Qty": 1, "RMB": get_p(skirt_cn, size)})
 
 # --- 7. Certification ---
@@ -451,12 +465,10 @@ if not df_res.empty:
     valid_date = date.today() + timedelta(days=7)
     fob_price = total_usd + 900
 
-    # 结果显示
     st.header(f"💰 Total Price: $ {total_usd:,.2f}")
     
     st.markdown(f"#### (EXW Price / 出厂价 | Price Validity: {valid_date} / 价格有效期至: {valid_date})")
     
-    # 配置清单表头英中对照
     df_display = df_res[['Cat', 'Item', 'Spec', 'Qty']].rename(columns={
         "Cat": "Category / 类别", 
         "Item": "Item / 项目", 
@@ -473,11 +485,7 @@ if not df_res.empty:
         with st.expander("📄 Configuration List / 配置清单", expanded=True):
             st.table(df_display)
 
-    st.caption(f"🚢 FOB Price / FOB 价格 : $ {fob_price:,.2f}")
+    st.caption(f"🚢 FOB Price / FOB 价格 (含$900杂费): $ {fob_price:,.2f}")
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
-
-
-
-
