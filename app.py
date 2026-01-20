@@ -246,7 +246,7 @@ else:
 # 主界面
 # ==========================================
 
-st.image("static/logo.png", width=300)
+st.image("static/logo.png", width=200)
 
 st.title("🏠 Container House Quotation")
 bill = []
@@ -531,6 +531,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
