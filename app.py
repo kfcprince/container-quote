@@ -311,25 +311,33 @@ st.markdown("---")
 st.subheader("3. Doors & Windows / 门窗")
 c1, c2, c3 = st.columns(3)
 with c1:
-    # [已更新] 这里是最新的专业版翻译列表
+    # [更新] 增加了你要求的三个新选项
     d_main_opts = [
         'Commercial Alum. Door (Double) / 肯德基双开门', 
         'Commercial Alum. Door (Single) / 肯德基单开门', 
         'Steel Security Door (Type A) / 防盗门1', 
         'Ti-Mg Alloy Security Door / 防盗门2(钛镁合金)', 
         'Thermal Break Alum. Door (Double) / 断桥铝对开门', 
-        'Thermal Break Alum. Door (Single) / 断桥铝单开门', 
+        'Thermal Break Alum. Door (Single) / 断桥铝单开门',
+        # --- 新增的三个选项 ---
         'Thermal Break Sliding Door / 断桥铝推拉门', 
-        'Ti-Mg Alloy Sliding Door / 钛镁合金推拉门', 
+        'Ti-Mg Alloy Sliding Door / 钛镁合金推拉门',
         'Normal Steel Double Door / 普通钢制对开门',
+        # --------------------
         'Electric Roller Shutter / 电动卷帘门', 
-        'Thermal Break Door w/ Grids / 断桥铝格单开门', 
+        'Thermal Break Door w/ Grids / 断桥铝格格单开门', 
         'Single Steel Door / 钢制单开', 
         'Custom / 定制'
     ]
     d_main = st.selectbox("Main Door / 入户门", d_main_opts)
-    # 注意：这里我们用 get_cn(d_main) 提取中文去查价
-    bill.append({"Cat": t_cat("门窗"), "Item": t_item("入户门"), "Spec": d_main, "Qty": 1, "RMB": get_p(get_cn(d_main), size)})
+    
+    # [新增] 颜色选择
+    d_color = st.selectbox("Door Color / 颜色", ['Black / 黑色', 'White / 白色', 'Grey / 灰色'])
+    
+    # 将颜色合并到 Spec (规格) 中显示
+    full_spec = f"{d_main} (Color: {get_cn(d_color)})"
+    
+    bill.append({"Cat": t_cat("门窗"), "Item": t_item("入户门"), "Spec": full_spec, "Qty": 1, "RMB": get_p(get_cn(d_main), size)})
 
 with c2:
     d_inner_opts = ['Standard / 标配室内门', 'High-end Alum. Frame / 高端铝框木芯门', 'Barn Door / 谷仓门', 'Wood Core / 木芯门', 'Custom / 定制']
@@ -539,6 +547,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
