@@ -72,7 +72,7 @@ default_data = [
     ['钛镁合金推拉门', '樘', 1400, 1400, 1400, 1400, 1400, 1400, 1400],
     ['普通钢制对开门', '樘', 800, 800, 800, 800, 800, 800, 800],
     ['电动卷帘门', '樘', 3000, 3000, 3000, 3000, 3000, 3000, 3000],
-    ['断桥铝格格单开门', '樘', 1500, 1500, 1500, 1500, 1500, 1500, 1500],
+    ['断桥铝格单开门', '樘', 1500, 1500, 1500, 1500, 1500, 1500, 1500],
     ['钢制单开', '樘', 500, 500, 500, 500, 500, 500, 500],
     ['地板革(2mm)', '套', 300, 500, 400, 450, 600, 800, 1000],
     ['石塑锁扣地板(4cm)', '套', 600, 1000, 800, 900, 1200, 1500, 1800],
@@ -319,8 +319,11 @@ with c1:
         'Ti-Mg Alloy Security Door / 防盗门2(钛镁合金)', 
         'Thermal Break Alum. Door (Double) / 断桥铝对开门', 
         'Thermal Break Alum. Door (Single) / 断桥铝单开门', 
+        'Thermal Break Sliding Door / 断桥铝推拉门', 
+        'Ti-Mg Alloy Sliding Door / 钛镁合金推拉门', 
+        'Normal Steel Double Door / 普通钢制对开门',
         'Electric Roller Shutter / 电动卷帘门', 
-        'Thermal Break Door w/ Grids / 断桥铝格格单开门', 
+        'Thermal Break Door w/ Grids / 断桥铝格单开门', 
         'Single Steel Door / 钢制单开', 
         'Custom / 定制'
     ]
@@ -536,6 +539,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
