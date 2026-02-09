@@ -304,7 +304,7 @@ with c2:
 with c3:
     floor = st.selectbox("Floor / 地板", ['Vinyl(2mm) / 地板革(2mm)', 'SPC(4cm) / 石塑锁扣地板(4cm)'])
     floor_cn = get_cn(floor)
-    if floor_cn != '地板革(2mm)': bill.append({"Cat": t_cat("装修"), "Item": t_item("地板升级"), "Spec": floor, "Qty": 1, "RMB": get_p(floor_cn, size)})
+    bill.append({"Cat": t_cat("装修"), "Item": t_item("地板升级"), "Spec": floor, "Qty": 1, "RMB": get_p(floor_cn, size)})
 
 # --- 3. Doors & Windows ---
 st.markdown("---")
@@ -547,6 +547,7 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
 
 
 
