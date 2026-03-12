@@ -30,11 +30,12 @@ st.markdown(
 )
 
 # ==========================================
-# 1. 核心数据 (CSV结构)
+# 1. 核心数据 (保持叫 v3)
 # ==========================================
-CSV_FILE = "prices_v4.csv"
+CSV_FILE = "prices_v3.csv"
 columns = ['项目名称', '单位', 'X折叠', 'F700', '10FT', '15FT', '20FT', '30FT', '40FT']
 
+# 这里的 default_data 是兜底用的，万一文件丢了可以重新生成
 default_data = [
     ['无', '项', 0, 0, 0, 0, 0, 0, 0],
     ['不要', '项', 0, 0, 0, 0, 0, 0, 0],
@@ -184,12 +185,49 @@ def get_cn(text):
         return text.split("/")[-1].strip()
     return text
 
-# 初始化数据
+# ==========================================
+# 初始化与数据融合逻辑 (关键修改区域)
+# ==========================================
 if not os.path.exists(CSV_FILE):
     df_db = pd.DataFrame(default_data, columns=columns)
     df_db.to_csv(CSV_FILE, index=False, encoding='utf-8-sig')
 else:
     df_db = pd.read_csv(CSV_FILE)
+    needs_update = False
+    
+    # 1. 自动补清新项目（如果你在 Github 的老表里没有这几个项，就加上去）
+    new_items = [
+        {'项目名称': '100厚聚氨酯', '单位': '平米', 'X折叠':0, 'F700':0, '10FT':0, '15FT':0, '20FT':0, '30FT':0, '40FT':21400},
+        {'项目名称': '100mm EPS顶板', '单位': '项', 'X折叠':0, 'F700':0, '10FT':0, '15FT':0, '20FT':1000, '30FT':1500, '40FT':2000},
+        {'项目名称': '100mm PU顶板', '单位': '项', 'X折叠':0, 'F700':0, '10FT':0, '15FT':0, '20FT':2700, '30FT':3800, '40FT':5400},
+        {'项目名称': '100mm顶部框架', '单位': '项', 'X折叠':0, 'F700':0, '10FT':0, '15FT':0, '20FT':1000, '30FT':1500, '40FT':2000}
+    ]
+    
+    for item in new_items:
+        if item['项目名称'] not in df_db['项目名称'].values:
+            df_db = pd.concat([df_db, pd.DataFrame([item])], ignore_index=True)
+            needs_update = True
+            
+    # 2. 强制覆盖你需要修改的那三项老价格
+    try:
+        if '屋顶全贴防水卷材' in df_db['项目名称'].values:
+            df_db.loc[df_db['项目名称'] == '屋顶全贴防水卷材', ['20FT', '30FT', '40FT']] = [800, 1200, 1800]
+            needs_update = True
+            
+        if '露台' in df_db['项目名称'].values:
+            df_db.loc[df_db['项目名称'] == '露台', ['F700', '10FT', '15FT', '20FT', '30FT', '40FT']] = 4500
+            needs_update = True
+            
+        if '露台顶' in df_db['项目名称'].values:
+            df_db.loc[df_db['项目名称'] == '露台顶', ['F700', '10FT', '15FT', '20FT', '30FT', '40FT']] = 3500
+            needs_update = True
+    except Exception as e:
+        st.error(f"价格合并报错，请检查: {e}")
+
+    # 如果发现了变化，就静默更新后台的数据结构
+    if needs_update:
+        df_db.to_csv(CSV_FILE, index=False, encoding='utf-8-sig')
+
 
 def get_p(item_name, size):
     try:
@@ -227,7 +265,7 @@ if admin_pwd == "HUAhan807810":
         st.download_button(
             label="📥 Export CSV / 导出价格表",
             data=edited_df.to_csv(index=False, encoding='utf-8-sig'),
-            file_name="prices_v4.csv",
+            file_name="prices_v3.csv",
             mime="text/csv"
         )
     df_active = edited_df
@@ -309,7 +347,6 @@ with c3:
     floor_cn = get_cn(floor)
     bill.append({"Cat": t_cat("装修"), "Item": t_item("地板升级"), "Spec": floor, "Qty": 1, "RMB": get_p(floor_cn, size)})
 
-    # 将 100厚顶板 移至此处
     roof_100_opts = ['None / 无', '100mm EPS / 100mm EPS顶板', '100mm PU / 100mm PU顶板', '100mm Frame / 100mm顶部框架']
     roof_100 = st.selectbox("100mm Roof Panel / 100厚顶板", roof_100_opts, disabled=is_x)
     roof_100_cn = get_cn(roof_100)
