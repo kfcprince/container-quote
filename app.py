@@ -251,7 +251,7 @@ if admin_pwd == "HUAhan807810":
         st.session_state.admin_pwd_input = ""
         st.rerun()
     st.sidebar.markdown("### Settings / 设置")
-    exchange_rate = st.sidebar.number_input("Exchange Rate (RMB/USD)", 6.0, 8.0, 6.8, 0.05)
+    exchange_rate = st.sidebar.number_input("Exchange Rate (RMB/USD)", 6.0, 8.0, 6.7, 0.05)
     markup_rate = st.sidebar.number_input("Markup / 利润系数", 1.0, 2.5, 1.2, 0.05)
     
     with st.expander("🛠️ Price Editor / 底价管理", expanded=False):
@@ -272,12 +272,12 @@ if admin_pwd == "HUAhan807810":
 
 elif admin_pwd != "":
     st.sidebar.error("❌ Incorrect Password / 密码错误")
-    exchange_rate = 6.8
+    exchange_rate = 6.7
     markup_rate = 1.2
     df_active = df_db
     
 else:
-    exchange_rate = 6.8
+    exchange_rate = 6.7
     markup_rate = 1.2
     df_active = df_db
 
@@ -572,3 +572,4 @@ if not df_res.empty:
 
 else:
     st.info("Please select items to generate quote. / 请选择配置以生成报价。")
+
