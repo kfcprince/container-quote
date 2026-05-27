@@ -54,7 +54,7 @@ LANG_DICT = {
         "Roof Waterproof": "Impermeabilización de techo", "PU Panel 75": "Panel de PU 75",
         "Bottom PU(4cm)": "PU inferior (4cm)", "Bottom PU(Block)": "PU inferior (Bloque)",
         "Glass Wall": "Pared de vidrio", "Glass Wall Qty": "Cant. pared de vidrio",
-        "Outdoor Terrace+Roof": "Terraza exterior + Techo", "Stairs": "Escaleras", "Full Roof": "Techo completo",
+        "Outdoor Terrace+Roof": "Terraza exterior + Techo", "Built-in Stairs": "Escaleras integradas", "External Stairs": "Escaleras externas", "Full Roof": "Techo completo",
         "Hydraulic Rod Qty": "Cant. de varilla hidráulica", "Trailer": "Remolque",
         "Foot Cups": "Copas de pie", "Support Legs": "Patas de apoyo",
         "Top Config": "Config. superior", "Skirting": "Rodapié",
@@ -98,7 +98,7 @@ LANG_DICT = {
         "Roof Waterproof": "Imperméabilisation du toit", "PU Panel 75": "Panneau PU 75",
         "Bottom PU(4cm)": "PU inférieur (4cm)", "Bottom PU(Block)": "PU inférieur (Bloc)",
         "Glass Wall": "Mur de verre", "Glass Wall Qty": "Qté mur de verre",
-        "Outdoor Terrace+Roof": "Terrasse extérieure + Toit", "Stairs": "Escaliers", "Full Roof": "Toit complet",
+        "Outdoor Terrace+Roof": "Terrasse extérieure + Toit", "Built-in Stairs": "Escaliers intégrés", "External Stairs": "Escaliers externes", "Full Roof": "Toit complet",
         "Hydraulic Rod Qty": "Qté de tige hydraulique", "Trailer": "Remorque",
         "Foot Cups": "Coupes de pied", "Support Legs": "Pieds de support",
         "Top Config": "Config. supérieure", "Skirting": "Plinthe",
@@ -174,6 +174,7 @@ default_data = [
     ['碳晶板(8mm)', '套', 4000, 4000, 2800, 3500, 4000, 4500, 5500],
     ['竹木纤维板', '套', 4000, 4000, 3000, 3500, 3500, 4500, 5500],
     ['聚氨酯板75', '项', 0, 6000, 6000, 6000, 4500, 7000, 9000],
+    ['eps 100mm', '平米', 0, 0, 0, 3000, 0, 5000, 7000],
     ['普通外墙板', '套', 0, 0, 0, 0, 0, 0, 0],
     ['金属雕花板', '套', 2500, 2200, 1800, 2100, 2500, 3500, 4500],
     ['长城板', '套', 2500, 2500, 2500, 2500, 2500, 3500, 4500],
@@ -243,15 +244,16 @@ default_data = [
     ['液压杆+绞盘', '套', 0, 500, 500, 500, 500, 500, 500],
     ['玻璃幕墙', '项', 0, 3200, 3200, 3200, 3200, 3200, 3200],
     ['室外露台+屋顶', '项', 0, 4000, 4000, 4000, 5000, 7500, 7500],
-    ['楼梯', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
+    ['内置楼梯', '项', 0, 5000, 5000, 5000, 5000, 5000, 5000],
+    ['外置楼梯', '项', 0, 2500, 2500, 2500, 2500, 2500, 2500],
     ['拖车', '辆', 0, 0, 0, 0, 16000, 26000, 26000]
 ]
 
 RESTRICTED_FOR_X = [
-    '屋顶全贴防水卷材', '聚氨酯板75', '聚氨酯底部保温(4cm)', '聚氨酯底部保温(块)', 
-    '上下水认证', '马桶', '排气扇(200*200)', '热水器', '螺栓可调节支撑地脚杯', 
-    '可调节大支撑腿', '液压杆+绞盘', '玻璃幕墙', '室外露台+屋顶', '通铺屋顶', 
-    '楼梯', '墙板特殊颜色', '吊柜', '卫生间配置', '橱柜选择', 
+    '屋顶全贴防水卷材', '聚氨酯板75', '聚氨酯底部保温(4cm)', '聚氨酯底部保温(块)',
+    '上下水认证', '马桶', '排气扇(200*200)', '热水器', '螺栓可调节支撑地脚杯',
+    '可调节大支撑腿', '液压杆+绞盘', '玻璃幕墙', '室外露台+屋顶', '通铺屋顶',
+    '墙板特殊颜色', '吊柜', '卫生间配置', '橱柜选择',
     '踢脚线/顶角线/阴角线', '顶部瓦楞板', '内顶金属雕花板', '平顶', '长城板'
 ]
 
@@ -267,10 +269,10 @@ TRANS = {
     "墙板特殊颜色": "Special Wall Color / 墙板特殊颜色", "屋顶防水": "Roof Waterproof / 屋顶防水",
     "聚氨酯板75": "PU Panel 75 / 聚氨酯板75", "底部保温(4cm)": "Bottom PU(4cm) / 底部保温",
     "底部保温(块)": "Bottom PU(Block) / 底部保温块", "玻璃幕墙": "Glass Wall / 玻璃幕墙",
-    "露台": "Outdoor Terrace+Roof / 室外露台+屋顶", "楼梯": "Stairs / 楼梯", "通铺屋顶": "Full Roof / 通铺屋顶",
+    "露台": "Outdoor Terrace+Roof / 室外露台+屋顶", "内置楼梯": "Built-in Stairs / 内置楼梯", "外置楼梯": "External Stairs / 外置楼梯", "通铺屋顶": "Full Roof / 通铺屋顶",
     "液压杆": "Hydraulic Rod / 液压杆", "拖车": "Trailer / 拖车", "地脚杯": "Foot Cups / 地脚杯",
     "支撑腿": "Support Legs / 支撑腿", "踢脚线": "Skirting / 踢脚线", "插座认证": "Socket Cert / 插座认证",
-    "上下水认证": "Plumbing Cert / 上下水认证", "灯具认证": "Light Cert / 灯具认证", "认证电线": "Wire Cert / 认证电线"
+    "上下水认证": "Plumbing Cert / 上下水认证", "灯具认证": "Light Cert / 灯具认证", "认证电线": "Wire Cert / 认证电线", "澳标电配": "AU Electric Kit / 澳标电配"
 }
 
 def t_cat(k): return t_ui(TRANS.get(k, k))
@@ -366,10 +368,17 @@ is_f700 = (size == "F700")
 c1, c2, c3 = st.columns(3)
 with c1:
     ins_opts = ['Rock Wool 50mm / 岩棉 50mm', 'Rock Wool 75mm / 岩棉 75mm', 'EPS 75mm / eps 75mm', 'PU 75mm / 聚氨酯 75mm']
+    if size in ['20FT', '30FT', '40FT']: ins_opts.append('EPS 100mm / eps 100mm')
     if size == '40FT': ins_opts.append('PU 100mm / 100厚聚氨酯')
     ins = st.selectbox(t_ui("Insulation / 保温材料"), ins_opts, format_func=t_ui, key="k_ins")
     ins_cn = get_cn(ins)
     if ins_cn != '岩棉 50mm': bill.append({"Cat": t_cat("装修"), "Item": t_item("保温升级"), "Spec": t_ui(ins), "Qty": 1, "RMB": get_p(ins_cn, size)})
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        if "Yes" in st.selectbox(t_ui("Built-in Stairs / 内置楼梯"), ["No / 不需要", "Yes / 需要"], disabled=is_x or is_f700, format_func=t_ui, key="k_builtin_stair"): bill.append({"Cat": t_cat("结构"), "Item": t_item("内置楼梯"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('内置楼梯', size)})
+    with col_b:
+        if "Yes" in st.selectbox(t_ui("External Stairs / 外置楼梯"), ["No / 不需要", "Yes / 需要"], disabled=is_x or is_f700, format_func=t_ui, key="k_ext_stair"): bill.append({"Cat": t_cat("结构"), "Item": t_item("外置楼梯"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('外置楼梯', size)})
     
     st.selectbox(t_ui("Frame Color / 框架颜色"), ['White / 白色', 'Black / 黑色', 'Grey / 灰色', 'Custom / 定制'], format_func=t_ui, key="k_frame_color")
     wall_col_spec = st.selectbox(t_ui("Special Wall Color / 墙板特殊颜色"), ["No / 不需要", "Yes / 需要"], disabled=is_x, format_func=t_ui, key="k_wall_color")
@@ -434,7 +443,9 @@ with c1:
     bath_opts = ['None / 无', 'Dry-Wet Separate / 干湿分离', 'Dry-Wet(Frosted Glass) / 干湿分离(升级油砂玻璃)', 'Dry-Wet(Carbon/Bamboo) / 干湿分离(升级碳晶/竹木)', 'Fan-shaped / 扇形卫浴']
     bath = st.selectbox(t_ui("Bathroom / 卫生间"), bath_opts, disabled=disable_kb, format_func=t_ui, key="k_bath")
     bath_cn = get_cn(bath)
-    if bath_cn != '无' and not disable_kb: bill.append({"Cat": t_cat("厨卫"), "Item": t_item("卫浴"), "Spec": t_ui(bath), "Qty": 1, "RMB": get_p(bath_cn, size)})
+    if bath_cn != '无' and not disable_kb:
+        bath_qty = st.number_input(t_ui("Bathroom Qty / 卫生间数量"), 1, 10, 1, key="k_bath_qty")
+        bill.append({"Cat": t_cat("厨卫"), "Item": t_item("卫浴"), "Spec": t_ui(bath), "Qty": bath_qty, "RMB": get_p(bath_cn, size)})
     
     cab_opts = ['None / 无', 'L-Cabinet+Sink / L橱柜+洗碗池', 'Black L-Cabinet+Sink / 黑色L橱柜+洗碗池', 'Straight Cabinet / 一字型橱柜']
     cab = st.selectbox(t_ui("Cabinet / 橱柜"), cab_opts, disabled=disable_kb, format_func=t_ui, key="k_cab")
@@ -472,7 +483,6 @@ with c2:
         g_wall_qty = st.number_input(t_ui("Glass Wall Qty / 玻璃幕墙数量"), 1, 10, 1, key="k_glass_qty")
         bill.append({"Cat": t_cat("结构"), "Item": t_item("玻璃幕墙"), "Spec": t_ui("Yes / 需要"), "Qty": g_wall_qty, "RMB": get_p('玻璃幕墙', size)})
     if "Yes" in st.selectbox(t_ui("Outdoor Terrace+Roof / 室外露台+屋顶"), ["No / 不需要", "Yes / 需要"], disabled=disable_struct, format_func=t_ui, key="k_terrace"): bill.append({"Cat": t_cat("结构"), "Item": t_item("露台"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('室外露台+屋顶', size)})
-    if "Yes" in st.selectbox(t_ui("Stairs / 楼梯"), ["No / 不需要", "Yes / 需要"], disabled=disable_struct, format_func=t_ui, key="k_stairs"): bill.append({"Cat": t_cat("结构"), "Item": t_item("楼梯"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('楼梯', size)})
     is_frozen_roof = disable_struct or disable_special
     if "Yes" in st.selectbox(t_ui("Full Roof / 通铺屋顶"), ["No / 不需要", "Yes / 需要"], disabled=is_frozen_roof, format_func=t_ui, key="k_fullroof"): bill.append({"Cat": t_cat("结构"), "Item": t_item("通铺屋顶"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('通铺屋顶', size)})
 
@@ -514,6 +524,12 @@ with c1:
         std = st.selectbox(t_ui("Wire Std / 标准"), ['EU / 欧标', 'US / 美标', 'AU / 澳标'], format_func=t_ui, key="k_wire_std")
         bill.append({"Cat": t_cat("认证"), "Item": t_item("认证电线"), "Spec": t_ui(std), "Qty": 1, "RMB": get_p('认证电线', size)})
 with c2:
+    au_price_map = {'20FT': 300, '30FT': 450, '40FT': 600}
+    au_avail = size in ['20FT', '30FT', '40FT']
+    opt_au = st.selectbox(t_ui("AU Electric Kit / 澳标电配"), ["No / 不需要", f"Yes (Socket+Switch, no wire) / 需要（插座+开关，不含电线）"], disabled=not au_avail, format_func=t_ui, key="k_au_elec")
+    if "Yes" in opt_au and not is_x:
+        au_amt = au_price_map.get(size, 0)
+        bill.append({"Cat": t_cat("认证"), "Item": t_item("澳标电配"), "Spec": t_ui(f"{size} + ¥{au_amt} (Socket+Switch, no wire) / {size}尺 + ¥{au_amt}（插座+开关，不含电线）"), "Qty": 1, "RMB": au_amt})
     if "Yes" in st.selectbox(t_ui("Socket Cert / 插座认证"), ["No / 不需要", "Yes / 需要"], format_func=t_ui, key="k_sock_cert"): bill.append({"Cat": t_cat("认证"), "Item": t_item("插座认证"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('认证插座开关', size)})
     if "Yes" in st.selectbox(t_ui("Plumbing Cert / 上下水认证"), ["No / 不需要", "Yes / 需要"], disabled=is_x, format_func=t_ui, key="k_plumb_cert"): bill.append({"Cat": t_cat("认证"), "Item": t_item("上下水认证"), "Spec": t_ui("Yes / 需要"), "Qty": 1, "RMB": get_p('上下水认证', size)})
 with c3:
