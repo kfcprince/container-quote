@@ -521,7 +521,7 @@ c1, c2, c3 = st.columns(3)
 with c1:
     opt_wire = st.selectbox(t_ui("Wire Cert / 电线认证"), ["No / 不需要", "Yes / 需要"], format_func=t_ui, key="k_wire_cert")
     if "Yes" in opt_wire:
-        std = st.selectbox(t_ui("Wire Std / 标准"), ['EU / 欧标', 'US / 美标', 'AU / 澳标'], format_func=t_ui, key="k_wire_std")
+        std = st.selectbox(t_ui("Wire Std / 标准"), ['EU / 欧标', 'UL / 美标', 'AU / 澳标'], format_func=t_ui, key="k_wire_std")
         bill.append({"Cat": t_cat("认证"), "Item": t_item("认证电线"), "Spec": t_ui(std), "Qty": 1, "RMB": get_p('认证电线', size)})
 with c2:
     au_price_map = {'20FT': 300, '30FT': 450, '40FT': 600}
